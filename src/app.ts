@@ -1,11 +1,30 @@
-import express, {Request, Response, Application} from 'express'
+import express, { Request, Response, Application } from "express";
+import dotenv from "dotenv";
+dotenv.config();
+// import mongoose from "mongoose";
 
-const app: Application = express()
+import { vidInfoRouter } from "./routes/vidInfo";
+const app: Application = express();
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello world')
-})
+// middleware
+app.use(express.json());
+
+// routes
+app.use(vidInfoRouter);
+
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hello world");
+});
 
 app.listen(5000, () => {
-  console.log('Server is running on port 5000')
-})
+  console.log("Server is running on port 5000");
+});
+
+// mongoose
+//   .connect(process.env.MONGO_URI!)
+//   .then(() => {
+//     console.log("Connected to MongoDB Successfully");
+//   })
+//   .catch((err) => {
+//     console.log(err);
+//   });
