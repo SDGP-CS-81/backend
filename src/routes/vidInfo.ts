@@ -1,15 +1,15 @@
 import { Router } from "express";
 import {
   getVidInfo,
-  setVidInfo,
+  createVidInfo,
   updateVidInfo,
   deleteVidInfo,
 } from "../controllers/vidInfoController";
 export const vidInfoRouter = Router();
 
 vidInfoRouter
-  .route("/vidInfo")
+  .route("/vid/:videoid")
   .get(getVidInfo)
-  .post(setVidInfo)
+  .post(createVidInfo)
   .put(updateVidInfo)
   .delete(deleteVidInfo);
