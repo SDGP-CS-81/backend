@@ -10,7 +10,7 @@ const app: Application = express();
 app.use(express.json());
 
 // routes
-app.use(vidInfoRouter);
+app.use("/api", vidInfoRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello world");

@@ -44,17 +44,18 @@ export const createVidInfo = async (req: Request, res: Response) => {
 };
 
 export const updateVidInfo = async (req: Request, res: Response) => {
-  const videoID = req.params.videoid;
-  const vidInfo = await VidInfoModel.findById(videoID);
+  const vidInfo = await VidInfoModel.findById(req.params.videoid);
 
   if (!vidInfo) return res.status(204).json({ message: "VidInfo not found" });
 
-  const updatedVidInfo = await VidInfoModel.create({
-    videoID,
-    ...vidInfo,
-    ...req.body,
-  });
-  res.json(updatedVidInfo);
+  const response = await VidInfoModel.updateOne(
+    { _id: req.params.videoid },
+    new VidInfoModel({
+      ...vidInfo,
+      ...req.body,
+    })
+  );
+  res.json(response);
 };
 
 // returns null if nothing is found and deleted, return the deleted vidInfo if found
