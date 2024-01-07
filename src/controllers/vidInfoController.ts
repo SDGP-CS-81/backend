@@ -22,11 +22,22 @@ export const getVidInfo = async (
   // get video info from model and analysis
   // retrieve image frame from user???
   const { categoryScores, frameScores } = videoAnalyserClass(videoID);
+  res.locals.videoID = videoID;
+  res.locals.categoryScores = categoryScores;
+  res.locals.frameScores = frameScores;
   next();
 };
 
 export const createVidInfo = async (req: Request, res: Response) => {
-  const data = req.body;
+  let data = req.body;
+
+  if (res.locals.videoID)
+    data = {
+      _id: req.params.videoid,
+      categoryScores: res.locals.categoryScores,
+      frameScores: res.locals.frameScores,
+    };
+
   const newVidInfo = await VidInfoModel.create(data);
 
   res.json(newVidInfo);

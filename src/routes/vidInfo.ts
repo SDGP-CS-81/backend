@@ -9,7 +9,7 @@ export const vidInfoRouter = Router();
 
 vidInfoRouter
   .route("/vid/:videoid")
-  .get(getVidInfo)
+  .get(getVidInfo, createVidInfo)
   .post(createVidInfo)
   .put(updateVidInfo)
   .delete(deleteVidInfo);

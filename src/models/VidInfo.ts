@@ -11,10 +11,6 @@ const vidInfoSchema = new Schema({
     type: String,
     required: true,
   },
-  title: {
-    type: String,
-    required: true,
-  },
   categoryScores: {
     type: categoryProbabailities,
     required: false,

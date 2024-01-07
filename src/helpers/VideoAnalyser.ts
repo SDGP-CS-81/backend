@@ -4,6 +4,6 @@ export const videoAnalyserClass = (videoID: string) => {
   console.log(videoID);
   return {
     categoryScores: { nature: 0.5, urban: 0.5, lowlight: 0.5 },
-    frameScores: {},
+    frameScores: { someField: "someValue" },
   };
 };
