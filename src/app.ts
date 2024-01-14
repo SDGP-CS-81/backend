@@ -2,12 +2,13 @@ import express, { Request, Response, Application } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import mongoose from "mongoose";
-
+import cors from "cors";
 import { vidInfoRouter } from "./routes/vidInfo";
 const app: Application = express();
 
 // middleware
 app.use(express.json());
+app.use(cors());
 
 // routes
 app.use("/api", vidInfoRouter);
