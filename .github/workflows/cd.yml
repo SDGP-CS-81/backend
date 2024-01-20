@@ -1,0 +1,18 @@
+# name: CD Pipeline
+
+# on:
+#   workflow_run:
+#     workflows: [CI Pipeline]
+#     types:
+#       - completed
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Pull Docker Image
+#         run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bytesense-backend:latest
+#       - name: Delete Old Docker Container
+#         run: sudo docker rm -f bytesense-backend
+#       - name: Run Docker Container
+#         run: sudo docker run -d --name bytesense-backend -p 8080:5000 ${{ secrets.DOCKERHUB_USERNAME }}/bytesense-backend:latest
