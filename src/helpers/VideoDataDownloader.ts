@@ -5,7 +5,7 @@ export const getVideoDataStoryboard = async (videoId: string) => {
   const vidUrl = `https://www.youtube.com/watch?v=${videoId}`;
   // the highest resolution storyboard is the last one
   const sb = (await ytdl.getInfo(vidUrl)).videoDetails.storyboards.pop();
-  const frames: sharp.Sharp[] = [];
+  const frames: Buffer[] = [];
 
   if (sb === undefined) {
     return frames;
@@ -50,7 +50,7 @@ export const getVideoDataStoryboard = async (videoId: string) => {
 
         const extractedImage = collage.extract(extractOpts);
 
-        frames.push(extractedImage);
+        frames.push(await extractedImage.png().toBuffer());
       }
     }
   }
