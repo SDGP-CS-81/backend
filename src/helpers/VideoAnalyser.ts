@@ -1,18 +1,20 @@
 import opencv from "@u4/opencv4nodejs";
 
 export const getVideoDetailScore = async (images: Buffer[]) => {
-  // convolve the images (grayscale) with the laplacian operator
-  // and get the standard deviation.
+  // convolve the images (grayscale) with the laplacian operator.
   // this will return all the edges (rapid intensity changes) in the image
   // the higher the detail of the image the more variance there is
   // between edges and flat planes.
-  const frames = images.map(
-    (image) =>
+  const frames = images.map((image) =>
+    Math.pow(
+      // the variance of a sequence is the standard deviation squared
       opencv
         .imdecode(image, opencv.IMREAD_GRAYSCALE)
         .laplacian(opencv.CV_64F)
         .meanStdDev()
         .stddev.getDataAsArray()[0][0],
+      2,
+    ),
   );
 
   // we have to work with multiple frames for a video
@@ -21,9 +23,9 @@ export const getVideoDetailScore = async (images: Buffer[]) => {
   // we find the standard deviation for the variance of all frames
   // and then discard any frames that may be outliers
 
-  // calculate the mean of the stddevs for all frames
+  // calculate the mean of the variance for all frames
   const framesMean = frames.reduce((i, j) => i + j) / frames.length;
-  // calculate the stddev among the stddev of all the frames
+  // calculate the stddev among the variance of all the frames
   const framesStdDev = Math.sqrt(
     frames
       .map((frame) => Math.pow(frame - framesMean, 2))
@@ -33,7 +35,7 @@ export const getVideoDetailScore = async (images: Buffer[]) => {
   const devLowerBound = framesMean - framesStdDev;
   const devUpperBound = framesMean + framesStdDev;
 
-  // filter out any images that are beyond the standard deviation
+  // filter out any frames that have a variance that is beyond the standard deviation
   const filteredFrames = frames.filter(
     (frame) => frame <= devUpperBound && frame >= devLowerBound,
   );
