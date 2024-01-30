@@ -3,15 +3,12 @@ import { NodeFileSystem } from "@tensorflow/tfjs-node/dist/io/file_system";
 
 class ResnetWrapper {
   model!: tf.GraphModel;
-  modelUrl: NodeFileSystem;
+  modelFile: NodeFileSystem;
 
-  constructor(modelUrl: NodeFileSystem) {
-    this.modelUrl = modelUrl;
-  }
-
-  async load() {
-    console.log("Resnet load");
-    this.model = await tf.loadGraphModel(this.modelUrl);
+  constructor(modelPath: string) {
+    this.modelFile = tf.io.fileSystem(modelPath);
+    console.log(this.modelFile);
+    tf.loadGraphModel(this.modelFile).then((model) => (this.model = model));
   }
 
   preprocess(image: Buffer) {
