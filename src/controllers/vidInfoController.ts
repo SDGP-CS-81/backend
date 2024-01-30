@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { VidInfoModel } from "../models/VidInfo";
-import { videoAnalyserClass } from "../helpers/VideoAnalyser";
+import { getVideoAnalysis } from "../helpers/VideoAnalyser";
 
 // if vidInfo is not found in DB, obtain from classification and save to DB
 export const getVidInfo = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const videoID = req.params.videoid;
   const vidInfo = await VidInfoModel.findById(videoID);
@@ -21,7 +21,7 @@ export const getVidInfo = async (
 
   // get video info from model and analysis
   // retrieve image frame from user???
-  const { categoryScores, frameScores } = videoAnalyserClass(videoID);
+  const { categoryScores, frameScores } = await getVideoAnalysis(videoID);
   res.locals.videoID = videoID;
   res.locals.categoryScores = categoryScores;
   res.locals.frameScores = frameScores;
@@ -53,7 +53,7 @@ export const updateVidInfo = async (req: Request, res: Response) => {
     new VidInfoModel({
       ...vidInfo,
       ...req.body,
-    })
+    }),
   );
   res.json(response);
 };
