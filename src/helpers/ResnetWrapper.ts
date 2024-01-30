@@ -1,6 +1,19 @@
 import * as tf from "@tensorflow/tfjs-node";
 import { NodeFileSystem } from "@tensorflow/tfjs-node/dist/io/file_system";
 
+const classNames = [
+  "food",
+  "lowGraphics",
+  "lowLight",
+  "mechanicalItems",
+  "nature",
+  "person",
+  "sports",
+  "textHeavy",
+  "urban",
+  "news",
+];
+
 class ResnetWrapper {
   model!: tf.GraphModel;
   modelFile: NodeFileSystem;
@@ -34,7 +47,13 @@ class ResnetWrapper {
   predict(input_vector: tf.Tensor<tf.Rank>) {
     console.log("Resnet predict");
     const output = this.model.predict(input_vector) as tf.Tensor<tf.Rank>;
-    return Array.from(output.dataSync());
+    const classWeights = Array.from(output.dataSync()).map((weight, index) => [
+      classNames[index],
+      weight,
+    ]);
+
+    console.log(classWeights);
+    return Object.fromEntries(classWeights);
   }
 }
 
