@@ -17,7 +17,7 @@ class ResnetWrapper {
     "urban",
     "news",
   ];
-  private static modelPath = "../../model/model.json";
+  private static modelPath = "model/model.json";
   private static instance: ResnetWrapper;
 
   private constructor(modelPath: string) {
@@ -25,10 +25,11 @@ class ResnetWrapper {
   }
 
   static async getInstance() {
-    const instance = ResnetWrapper.instance;
+    let instance = ResnetWrapper.instance;
 
     if (!instance) {
       ResnetWrapper.instance = new ResnetWrapper(ResnetWrapper.modelPath);
+      instance = ResnetWrapper.instance;
     }
 
     if (instance.model) {

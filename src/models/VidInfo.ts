@@ -1,9 +1,16 @@
 import { Schema, model } from "mongoose";
 
 const categoryProbabailities = new Schema({
+  food: Number,
+  lowGraphics: Number,
+  lowLight: Number,
+  mechanicalItems: Number,
   nature: Number,
+  person: Number,
+  sports: Number,
+  textHeavy: Number,
   urban: Number,
-  lowlight: Number,
+  news: Number,
 });
 
 const vidInfoSchema = new Schema({
