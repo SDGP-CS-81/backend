@@ -1,12 +1,18 @@
 import opencv from "@u4/opencv4nodejs";
+import { getVideoDataStoryboard } from "./VideoDataDownloader";
 
-// dummy function to simulate the video analyser class
-// come up with better names if u can for these properties
-export const videoAnalyserClass = (videoID: string) => {
+export const getVideoAnalysis = async (videoID: string) => {
   console.log(videoID);
+  const images = await getVideoDataStoryboard(videoID);
+  const filteredImages = filterDetailOutliers(images);
+
+  const quality = getVideoDetailScore(
+    (await filteredImages).map((image) => image.score),
+  );
+
   return {
     categoryScores: { nature: 0.5, urban: 0.5, lowlight: 0.5 },
-    frameScores: { someField: "someValue" },
+    frameScores: { detailScore: quality },
   };
 };
 
