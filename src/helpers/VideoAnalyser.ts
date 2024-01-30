@@ -1,17 +1,22 @@
 import opencv from "@u4/opencv4nodejs";
 import { getVideoDataStoryboard } from "./VideoDataDownloader";
+import ResnetWrapper from "./ResnetWrapper";
 
 export const getVideoAnalysis = async (videoID: string) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
-  const filteredImages = filterDetailOutliers(images);
+  const filteredImages = await filterDetailOutliers(images);
+  const resnetWrapper = await ResnetWrapper.getInstance();
+  const categoryScores = resnetWrapper.predict(
+    ResnetWrapper.preprocess(filteredImages[0].image),
+  );
 
   const quality = getVideoDetailScore(
-    (await filteredImages).map((image) => image.score),
+    filteredImages.map((image) => image.score),
   );
 
   return {
-    categoryScores: { nature: 0.5, urban: 0.5, lowlight: 0.5 },
+    categoryScores,
     frameScores: { detailScore: quality },
   };
 };
