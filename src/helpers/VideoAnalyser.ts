@@ -1,14 +1,14 @@
 import opencv from "@u4/opencv4nodejs";
 import { getVideoDataStoryboard } from "./VideoDataDownloader";
-import ResnetWrapper from "./ResnetWrapper";
+import ModelWrapper from "./ModelWrapper";
 
 export const getVideoAnalysis = async (videoID: string) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
   const filteredImages = await filterDetailOutliers(images);
-  const resnetWrapper = await ResnetWrapper.getInstance();
-  const categoryScores = resnetWrapper.predict(
-    ResnetWrapper.preprocess(filteredImages[0].image),
+  const modelWrapper = await ModelWrapper.getInstance();
+  const categoryScores = modelWrapper.predict(
+    ModelWrapper.preprocess(filteredImages[0].image),
   );
 
   const quality = getVideoDetailScore(

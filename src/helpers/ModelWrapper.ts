@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs-node";
 import { NodeFileSystem } from "@tensorflow/tfjs-node/dist/io/file_system";
 
-class ResnetWrapper {
+class ModelWrapper {
   private model!: tf.GraphModel;
   private modelFile: NodeFileSystem;
 
@@ -18,18 +18,18 @@ class ResnetWrapper {
     "news",
   ];
   private static modelPath = "model/model.json";
-  private static instance: ResnetWrapper;
+  private static instance: ModelWrapper;
 
   private constructor(modelPath: string) {
     this.modelFile = tf.io.fileSystem(modelPath);
   }
 
   static async getInstance() {
-    let instance = ResnetWrapper.instance;
+    let instance = ModelWrapper.instance;
 
     if (!instance) {
-      ResnetWrapper.instance = new ResnetWrapper(ResnetWrapper.modelPath);
-      instance = ResnetWrapper.instance;
+      ModelWrapper.instance = new ModelWrapper(ModelWrapper.modelPath);
+      instance = ModelWrapper.instance;
     }
 
     if (instance.model) {
@@ -42,8 +42,6 @@ class ResnetWrapper {
   }
 
   static preprocess(image: Buffer) {
-    console.log("Resnet preprocess");
-
     let tensor = tf.node.decodeImage(image, 3);
 
     // Cast the tensor to float32
@@ -62,10 +60,9 @@ class ResnetWrapper {
   }
 
   predict(input_vector: tf.Tensor<tf.Rank>) {
-    console.log("Resnet predict");
     const output = this.model.predict(input_vector) as tf.Tensor<tf.Rank>;
     const classWeights = Array.from(output.dataSync()).map((weight, index) => [
-      ResnetWrapper.classNames[index],
+      ModelWrapper.classNames[index],
       weight,
     ]);
 
@@ -74,4 +71,4 @@ class ResnetWrapper {
   }
 }
 
-export default ResnetWrapper;
+export default ModelWrapper;
