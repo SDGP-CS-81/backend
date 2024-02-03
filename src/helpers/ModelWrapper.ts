@@ -50,11 +50,8 @@ class ModelWrapper {
     // Resize the image to the expected size for your model
     const resized = tf.image.resizeBilinear(tensor, [224, 224]);
 
-    // Normalize the image to be between 0 and 1
-    const normalized = tf.div(resized, tf.scalar(255.0));
-
     // Reshape to a single-element batch so we can pass it to predict.
-    const batched = tf.expandDims(normalized, 0);
+    const batched = tf.expandDims(resized, 0);
 
     return batched;
   }
