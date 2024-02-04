@@ -11,7 +11,11 @@ export const getVideoAnalysis = async (
 ) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
-  const filteredImages = await filterDetailOutliers(images);
+  const filteredImages = (await filterDetailOutliers(images)).sort(
+    (first, second) => {
+      return first.score - second.score;
+    },
+  );
   const modelWrapper = await ModelWrapper.getInstance();
   const categoryScores = modelWrapper.predict(
     ModelWrapper.preprocess(filteredImages[0].image),
@@ -74,7 +78,7 @@ export const filterDetailOutliers = async (images: Buffer[]) => {
   // we find the standard deviation for the variance of all frames
   // and then discard any frames that may be outliers
 
-  const imageScores = await getLaplacianVariance(images);
+  const { imageScores, laplaceMaps } = await getLaplacianMapVariance(images);
 
   const { numMean: scoresMean, numStdDev: scoresStdDev } =
     getMeanStdDev(imageScores);
@@ -85,38 +89,44 @@ export const filterDetailOutliers = async (images: Buffer[]) => {
   // filter out any frames that have a variance that is beyond the standard deviation
   const filteredImages = images
     .map((image, index) => {
-      return { image, score: imageScores[index] };
+      return {
+        image,
+        laplaceMap: laplaceMaps[index],
+        score: imageScores[index],
+      };
     })
     .filter(
       (imageScore) =>
         imageScore.score >= devLowerBound && imageScore.score <= devUpperBound,
     );
 
-  return filteredImages.sort();
+  return filteredImages;
 };
 
-const getLaplacianVariance = async (images: Buffer[]) => {
+const getLaplacianMapVariance = async (images: Buffer[]) => {
   // convolve the images (grayscale) with the laplacian operator.
   // this will return all the edges (rapid intensity changes) in the image
   // the higher the detail of the image the more variance there is
   // between edges and flat planes.
 
   const imageScores = [];
+  const laplaceMaps = [];
 
   for (let index = 0; index < images.length; index++) {
     // the variance of a sequence is the standard deviation squared
-    const data = (
-      await (
-        await (
-          await opencv.imdecodeAsync(images[index], opencv.IMREAD_GRAYSCALE)
-        ).laplacianAsync(opencv.CV_64F)
-      ).meanStdDevAsync()
+    const laplaceMap = await (
+      await opencv.imdecodeAsync(images[index], opencv.IMREAD_GRAYSCALE)
+    ).laplacianAsync(opencv.CV_64F);
+
+    const imageScore = (
+      await laplaceMap.meanStdDevAsync()
     ).stddev.getDataAsArray();
 
-    imageScores.push(Math.pow(data[0][0], 2));
+    imageScores.push(Math.pow(imageScore[0][0], 2));
+    laplaceMaps.push(laplaceMap);
   }
 
-  return imageScores;
+  return { imageScores: imageScores, laplaceMaps: laplaceMaps };
 };
 
 const getMeanStdDev = (numArray: number[]) => {
