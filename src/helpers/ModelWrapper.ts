@@ -5,16 +5,15 @@ class ModelWrapper {
   private model!: tf.GraphModel;
   private modelFile: NodeFileSystem;
 
+  // rename
   private static classNames = [
     "food",
     "lowGraphics",
     "lowLight",
-    "mechanicalItems",
     "nature",
     "person",
     "sports",
     "textHeavy",
-    "urban",
     "news",
   ];
   private static modelPath = "model/model.json";
