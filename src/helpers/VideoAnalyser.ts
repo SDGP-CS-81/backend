@@ -1,8 +1,8 @@
-import opencv from "@u4/opencv4nodejs";
 import {
   getVideoDataStoryboard,
   getVideoDataText,
 } from "./VideoDataDownloader";
+import opencv, { Mat } from "@u4/opencv4nodejs";
 import ModelWrapper from "./ModelWrapper";
 import fs from "fs/promises";
 
@@ -12,75 +12,49 @@ export const getVideoAnalysis = async (
 ) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
-  const filteredImages = (await filterDetailOutliers(images)).sort(
-    (first, second) => {
-      return first.score - second.score;
-    },
+  const diffedFilteredImages = filterDiffOutliers(
+    await filterDetailOutliers(images),
   );
 
-  // use the highest detail image as a pivot to diff all the other images
-  const highestDetailImage = filteredImages[filteredImages.length - 1];
-
-  // calculate the difference of the edges with the pivot image
-  const diffOfImages = filteredImages.map((first) => {
-    const diff = highestDetailImage.laplaceMap.absdiff(first.laplaceMap).sum();
-
-    return typeof diff === "number" ? diff : 0;
-  });
-
-  const { numMean, numStdDev } = getMeanStdDev(diffOfImages);
-  const devUpperBound = numMean + numStdDev;
-  const devLowerBound = numMean - numStdDev;
-
-  // remove all the images that fall out of the std deviation
-  // further helps us get rid of outlier content
-  // as an example this reliably removes the talking person segments
-  // in coding videos
-  const diffedFilteredImages = diffOfImages
-    .map((image, index) => {
-      return {
-        ...filteredImages[index],
-        diff: image,
-      };
-    })
-    .filter((item) => {
-      return item.diff >= devLowerBound && item.diff <= devUpperBound;
-    })
-    .sort((first, second) => {
-      // sort based on the difference distance
-      return first.diff - second.diff;
-    });
-
+  // use the image from the middle of the diff sorted array
   const predictionImage =
-    diffedFilteredImages[Math.round(diffedFilteredImages.length / 2)]; // use the mid distance/diff image
+    diffedFilteredImages[Math.round(diffedFilteredImages.length / 2)];
 
-  if (process.env.NODE_ENV !== "production") {
-    diffedFilteredImages.forEach((image) =>
-      console.log(image.score, image.diff),
-    );
-
-    diffedFilteredImages.forEach(async (item, index) => {
-      await opencv.imwriteAsync(`${index}.png`, item.laplaceMap);
-    });
-
-    await fs.writeFile("predicted_image.png", predictionImage.image);
-  }
+  diffedFilteredImages.forEach((image) =>
+    console.log(image.detailScore, image.diffScore),
+  );
+  await fs.writeFile("predicted_image.png", predictionImage.image);
 
   const modelWrapper = await ModelWrapper.getInstance();
   const categoryScores = modelWrapper.predict(
     ModelWrapper.preprocess(predictionImage.image),
   );
 
-  const quality = getVideoDetailScore(
-    filteredImages.map((image) => image.score),
-  );
+  // sum the required scores for all frames
+  const { frameDetail, frameDifference } = diffedFilteredImages
+    .map((item) => {
+      return {
+        frameDetail: item.detailScore,
+        frameDifference: item.diffScore,
+      };
+    })
+    .reduce((first, second) => {
+      return {
+        frameDetail: first.frameDetail + second.frameDetail,
+        frameDifference: first.frameDifference + second.frameDifference,
+      };
+    });
+
+  // calculate the mean
+  const detailScore = frameDetail / diffedFilteredImages.length;
+  const diffScore = frameDifference / diffedFilteredImages.length;
 
   const videoText = await getVideoDataText(videoID);
   const keywordScores = getVideoKeywordScore(videoText, categoryKeywords);
 
   return {
     categoryScores,
-    frameScores: { detailScore: quality },
+    frameScores: { detailScore, diffScore },
     keywordScores,
   };
 };
@@ -136,21 +110,65 @@ export const filterDetailOutliers = async (images: Buffer[]) => {
   const devLowerBound = scoresMean - scoresStdDev;
   const devUpperBound = scoresMean + scoresStdDev;
 
+  // zip the image, edge map and score together and
   // filter out any frames that have a variance that is beyond the standard deviation
-  const filteredImages = images
+  return images
     .map((image, index) => {
       return {
         image,
         laplaceMap: laplaceMaps[index],
-        score: imageScores[index],
+        detailScore: imageScores[index],
       };
     })
     .filter(
       (imageScore) =>
-        imageScore.score >= devLowerBound && imageScore.score <= devUpperBound,
-    );
+        imageScore.detailScore >= devLowerBound &&
+        imageScore.detailScore <= devUpperBound,
+    )
+    .sort((first, second) => {
+      return first.detailScore - second.detailScore;
+    });
+};
 
-  return filteredImages;
+export const filterDiffOutliers = (
+  images: {
+    image: Buffer;
+    laplaceMap: Mat;
+    detailScore: number;
+  }[],
+) => {
+  // use the highest detail image as a pivot to diff all the other images
+  const highestDetailImage = images[images.length - 1];
+
+  // calculate the difference of the edges with the pivot image
+  const diffOfImages = images.map((first) => {
+    const diff = highestDetailImage.laplaceMap.absdiff(first.laplaceMap).sum();
+
+    return typeof diff === "number" ? diff : 0;
+  });
+
+  const { numMean, numStdDev } = getMeanStdDev(diffOfImages);
+  const devUpperBound = numMean + numStdDev;
+  const devLowerBound = numMean - numStdDev;
+
+  // remove all the images that fall out of the std deviation
+  // further helps us get rid of outlier content
+  // as an example this reliably removes the talking person segments
+  // in coding videos
+  return diffOfImages
+    .map((image, index) => {
+      return {
+        ...images[index],
+        diffScore: image,
+      };
+    })
+    .filter((item) => {
+      return item.diffScore >= devLowerBound && item.diffScore <= devUpperBound;
+    })
+    .sort((first, second) => {
+      // sort based on the difference in feature distance
+      return first.diffScore - second.diffScore;
+    });
 };
 
 const getLaplacianMapVariance = async (images: Buffer[]) => {
