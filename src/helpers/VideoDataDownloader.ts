@@ -85,9 +85,13 @@ export const getVideoDataText = async (videoId: string) => {
   const categoryItem = videoCategory.items?.shift();
 
   return {
-    title: videoItem?.snippet?.title,
-    description: videoItem?.snippet?.description,
-    category: categoryItem?.snippet?.title,
-    channelId: videoItem?.snippet?.channelId,
+    title: videoItem?.snippet?.title ? videoItem?.snippet?.title : "",
+    description: videoItem?.snippet?.description
+      ? videoItem?.snippet?.description
+      : "",
+    category: categoryItem?.snippet?.title ? categoryItem?.snippet?.title : "",
+    channelId: videoItem?.snippet?.channelId
+      ? videoItem?.snippet?.channelId
+      : "",
   };
 };
