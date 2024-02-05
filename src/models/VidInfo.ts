@@ -1,17 +1,20 @@
 import { Schema, model } from "mongoose";
 
-const categoryProbabailities = new Schema({
-  food: Number,
-  lowGraphics: Number,
-  lowLight: Number,
-  mechanicalItems: Number,
-  nature: Number,
-  person: Number,
-  sports: Number,
-  textHeavy: Number,
-  urban: Number,
-  news: Number,
-});
+const categoryProbabailities = new Schema(
+  {
+    food: Number,
+    lowGraphics: Number,
+    lowLight: Number,
+    mechanicalItems: Number,
+    nature: Number,
+    person: Number,
+    sports: Number,
+    textHeavy: Number,
+    urban: Number,
+    news: Number,
+  },
+  { _id: false }
+);
 
 const vidInfoSchema = new Schema({
   _id: {
