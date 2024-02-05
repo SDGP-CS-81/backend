@@ -7,7 +7,7 @@ import ModelWrapper from "./ModelWrapper";
 
 export const getVideoAnalysis = async (
   videoID: string,
-  categoryKeywords: any,
+  categoryKeywords: { [key: string]: string[] },
 ) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
@@ -38,32 +38,25 @@ export const getVideoKeywordScore = (
     category: string;
     channelId: string;
   },
-  categoryKeywords: any,
+  categoryKeywords: { [key: string]: string[] },
 ) => {
-  const catKeywordEntries = Object.entries(categoryKeywords);
+  const keywordScores: { [key: string]: number } = {};
+  const textToSearch = Object.values(videoText).join(" ");
 
-  return Object.fromEntries(
-    catKeywordEntries.map((entry) => {
-      let count = 0;
+  Object.entries(categoryKeywords).forEach(([category, keywords]) => {
+    const matchedScores = keywords.map(
+      (keyword) =>
+        (textToSearch.match(new RegExp(`\\W${keyword}\\W`, "g")) || []).length,
+    );
 
-      (entry[1] as string[]).forEach((keyword) => {
-        Object.values(videoText).forEach((text) => {
-          const matches = text
-            .toLowerCase()
-            .match(`\\W${keyword.toLowerCase()}\\W`); // this is where matching happens
-          // this regex simply ensures that the keyword is surrounded by non-word chars
+    const numKeywordsMatched = matchedScores.filter(
+      (matchCount) => matchCount > 0,
+    ).length;
 
-          // simply increment a single counter
-          // this could possibly be extended to individual counts
-          // for each text section like title, description etc.
-          count += matches ? matches.length : 0;
-        });
-      });
+    keywordScores[category] = numKeywordsMatched;
+  });
 
-      entry[1] = count;
-      return entry;
-    }),
-  );
+  return keywordScores;
 };
 
 export const getVideoDetailScore = (imageScores: number[]) => {
