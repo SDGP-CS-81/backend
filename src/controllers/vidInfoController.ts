@@ -21,10 +21,17 @@ export const getVidInfo = async (
 
   // get video info from model and analysis
   // retrieve image frame from user???
-  const { categoryScores, frameScores } = await getVideoAnalysis(videoID);
+  const categoryKeywords = JSON.parse(
+    req.query.categoryKeywords ? req.query.categoryKeywords.toString() : "",
+  );
+  const { categoryScores, frameScores, keywordScores } = await getVideoAnalysis(
+    videoID,
+    categoryKeywords,
+  );
   res.locals.videoID = videoID;
   res.locals.categoryScores = categoryScores;
   res.locals.frameScores = frameScores;
+  res.locals.keywordScores = keywordScores;
   next();
 };
 
@@ -36,6 +43,7 @@ export const createVidInfo = async (req: Request, res: Response) => {
       _id: req.params.videoid,
       categoryScores: res.locals.categoryScores,
       frameScores: res.locals.frameScores,
+      keywordScores: res.locals.keywordScores,
     };
 
   const newVidInfo = await VidInfoModel.create(data);

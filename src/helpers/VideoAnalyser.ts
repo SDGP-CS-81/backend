@@ -1,8 +1,14 @@
 import opencv from "@u4/opencv4nodejs";
-import { getVideoDataStoryboard } from "./VideoDataDownloader";
+import {
+  getVideoDataStoryboard,
+  getVideoDataText,
+} from "./VideoDataDownloader";
 import ModelWrapper from "./ModelWrapper";
 
-export const getVideoAnalysis = async (videoID: string) => {
+export const getVideoAnalysis = async (
+  videoID: string,
+  categoryKeywords: any,
+) => {
   console.log(videoID);
   const images = await getVideoDataStoryboard(videoID);
   const filteredImages = await filterDetailOutliers(images);
@@ -15,10 +21,49 @@ export const getVideoAnalysis = async (videoID: string) => {
     filteredImages.map((image) => image.score),
   );
 
+  const videoText = await getVideoDataText(videoID);
+  const keywordScores = getVideoKeywordScore(videoText, categoryKeywords);
+
   return {
     categoryScores,
     frameScores: { detailScore: quality },
+    keywordScores,
   };
+};
+
+export const getVideoKeywordScore = (
+  videoText: {
+    title: string;
+    description: string;
+    category: string;
+    channelId: string;
+  },
+  categoryKeywords: any,
+) => {
+  const catKeywordEntries = Object.entries(categoryKeywords);
+
+  return Object.fromEntries(
+    catKeywordEntries.map((entry) => {
+      let count = 0;
+
+      (entry[1] as string[]).forEach((keyword) => {
+        Object.values(videoText).forEach((text) => {
+          const matches = text
+            .toLowerCase()
+            .match(`\\W${keyword.toLowerCase()}\\W`); // this is where matching happens
+          // this regex simply ensures that the keyword is surrounded by non-word chars
+
+          // simply increment a single counter
+          // this could possibly be extended to individual counts
+          // for each text section like title, description etc.
+          count += matches ? matches.length : 0;
+        });
+      });
+
+      entry[1] = count;
+      return entry;
+    }),
+  );
 };
 
 export const getVideoDetailScore = (imageScores: number[]) => {

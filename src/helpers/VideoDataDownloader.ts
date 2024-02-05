@@ -1,5 +1,6 @@
 import ytdl from "ytdl-core";
 import sharp from "sharp";
+import { youtube } from "@googleapis/youtube";
 
 export const getVideoDataStoryboard = async (videoId: string) => {
   const vidUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -57,4 +58,40 @@ export const getVideoDataStoryboard = async (videoId: string) => {
 
   console.log(`Extracted storyboard for video: ${vidUrl}`);
   return frames;
+};
+
+export const getVideoDataText = async (videoId: string) => {
+  const ytClient = youtube({
+    version: "v3",
+    auth: process.env.YT_API_KEY,
+  });
+
+  const videoDetails = (
+    await ytClient.videos.list({
+      part: ["snippet", "status"],
+      id: [videoId],
+    })
+  ).data;
+
+  const videoItem = videoDetails.items?.shift();
+
+  const videoCategory = (
+    await ytClient.videoCategories.list({
+      part: ["snippet"],
+      id: [`${videoItem?.snippet?.categoryId}`],
+    })
+  ).data;
+
+  const categoryItem = videoCategory.items?.shift();
+
+  return {
+    title: videoItem?.snippet?.title ? videoItem?.snippet?.title : "",
+    description: videoItem?.snippet?.description
+      ? videoItem?.snippet?.description
+      : "",
+    category: categoryItem?.snippet?.title ? categoryItem?.snippet?.title : "",
+    channelId: videoItem?.snippet?.channelId
+      ? videoItem?.snippet?.channelId
+      : "",
+  };
 };

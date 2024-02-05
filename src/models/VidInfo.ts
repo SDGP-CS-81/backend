@@ -27,6 +27,10 @@ const vidInfoSchema = new Schema({
     type: Object,
     required: false,
   },
+  keywordScores: {
+    type: Object,
+    required: false,
+  },
   userRated: {
     type: String,
     required: false,
