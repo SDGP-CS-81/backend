@@ -2,18 +2,22 @@ import ytdl from "ytdl-core";
 import sharp from "sharp";
 import { youtube } from "@googleapis/youtube";
 
+const FRAMES_MAX_LIMIT = 50;
+
 export const getVideoDataStoryboard = async (videoId: string) => {
   const vidUrl = `https://www.youtube.com/watch?v=${videoId}`;
   // the highest resolution storyboard is the last one
-  const sb = (await ytdl.getInfo(vidUrl)).videoDetails.storyboards.pop();
   const frames: Buffer[] = [];
+  const sb = (await ytdl.getInfo(vidUrl)).videoDetails.storyboards.pop();
 
   if (sb === undefined) {
     return frames;
   }
 
+  const sbStride = Math.round(sb.thumbnailCount / FRAMES_MAX_LIMIT);
+
   // a single storyboard may be split over multiple image atlases
-  for (let sbCount = 0; sbCount < sb.storyboardCount; sbCount++) {
+  for (let sbCount = 0; sbCount < sb.storyboardCount; sbCount += sbStride) {
     const response = await fetch(
       sb.templateUrl.replace("$M", sbCount.toString()),
     );
