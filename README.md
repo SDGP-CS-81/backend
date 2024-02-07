@@ -7,9 +7,7 @@ Please read this [article](https://cbea.ms/git-commit/) to learn how to write go
 ### Dependencies
 
 - `nodejs` >= 18.0
-- `python3` <= 3.11 (Only needed for converting the keras model to a tfjs compatible one)
 - `npm` >= 10.0
-- `tensorflow` >= 2.0
 - `tensorflowjs` >= 4.0
 - `libopencv` >= 4.0 (This could be built from source however the project is only tested with the prebuilt packages from Debian 12 and Fedora 39)
 
@@ -18,34 +16,7 @@ Please read this [article](https://cbea.ms/git-commit/) to learn how to write go
 - The YT_API_KEY environment variable needs to be set with a valid key obtained from [Google](https://console.cloud.google.com/) with access to the [YouTube Data API](https://developers.google.com/youtube/v3/getting-started) enabled.
 - The MONGODB_URI environment variable also needs to be set to point to a database with full read and write permissions.
 
-#### Classification Model
-
-You will also need a trained keras format `model.h5` from the [ML-Model](https://github.com/SDGP-CS-81/ML-Model) repo.
-
 ### Building and Running
-
-#### Model Conversion
-
-You need to ensure that you have access to a keras `model.h5` file in the current directory. This model has to be converted into a tfjs graph model before attempting to build and run the project.
-
-We recommend converting the model using a [Conda](https://docs.conda.io/en/latest/) environment.
-
-First clone the Backend repo,
-
-```sh
-git clone git@github.com:SDGP-CS-81/Backend.git
-mv model.h5 ./Backend
-cd Backend
-```
-
-Then you can create a conda environment and convert the model.
-
-```sh
-conda create -n tf-env python=3.11 tensorflowjs
-conda activate tf-env
-tensorflowjs_converter --input_format=keras --output_format=tfjs_graph_model model.h5 model
-rm model.h5
-```
 
 #### Docker
 
