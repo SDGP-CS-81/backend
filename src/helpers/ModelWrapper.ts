@@ -7,7 +7,6 @@ class ModelWrapper {
 
   // rename
   private static classNames = [
-    "food",
     "lowGraphics",
     "lowLight",
     "nature",
