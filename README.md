@@ -2,7 +2,9 @@
 
 ## Usage & Development
 
-Please read this [article](https://cbea.ms/git-commit/) to learn how to write good commit messages.
+Download the tensorflowjs Image Classification Model [here](https://drive.google.com/file/d/1Fph7pzxT0W7QHXCbLXI1Qg76n9CdvdW9/view?usp=sharing).
+
+Unzip and place the 'model' directory in the root of the project directory.
 
 ### Dependencies
 
