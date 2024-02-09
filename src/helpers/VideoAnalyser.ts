@@ -52,6 +52,14 @@ export const getVideoAnalysis = async (
   const videoText = await getVideoDataText(videoID);
   const keywordScores = getVideoKeywordScore(videoText, categoryKeywords);
 
+  // quick hack to use some reliable yt categorizations
+  // consider moving this to frontend?
+  if (videoText.category.toLowerCase().includes("music")) {
+    keywordScores["music"] = 1000;
+  } else if (videoText.category.toLowerCase().includes("gaming")) {
+    keywordScores["gaming"] = 1000;
+  }
+
   return {
     categoryScores,
     frameScores: { detailScore, diffScore },
