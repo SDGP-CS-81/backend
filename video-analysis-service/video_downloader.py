@@ -26,7 +26,9 @@ class VideoDownloader:
             raise VideoDownloaderError
 
         video_categories = self.video_info["categories"]
-        video_text_data = self.video_info["title"] + self.video_info["description"]
+        video_text_data = (
+            self.video_info["title"] + " " + self.video_info["description"]
+        )
 
         return (video_categories, video_text_data)
 

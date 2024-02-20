@@ -2,6 +2,7 @@ import cv2
 import statistics
 import asyncio
 import numpy
+import re
 
 
 class VideoAnalyser:
@@ -14,13 +15,42 @@ class VideoAnalyser:
         self.video_diff_score = None
         self.selected_frame = None
 
-    async def calculate_scores(self):
-        result = await asyncio.to_thread(self._calculate_scores)
+    async def calculate_frame_scores(self):
+        result = await asyncio.to_thread(self._calculate_frame_scores)
         # await asyncio.to_thread(self._save_to_disk)
 
         return result
 
+    @staticmethod
+    def calculate_text_scores(video_text_data, keywords):
+        keyword_scores = {key: 0 for key in keywords.keys()}
+
+        for key in keywords.keys():
+            matched_scores = list(
+                filter(
+                    lambda x: x > 0,
+                    [
+                        len(
+                            re.findall(
+                                re.compile(
+                                    f"\\W{value}\\W", re.MULTILINE + re.IGNORECASE
+                                ),
+                                video_text_data,
+                            )
+                        )
+                        for value in keywords[key]
+                    ],
+                )
+            )
+
+            keyword_scores[key] = len(matched_scores)
+
+        return keyword_scores
+
     def _save_to_disk(self):
+        if self.selected_frame:
+            self.selected_frame.save("selected_frame.webp")
+
         for f_idx in range(len(self.filtered_frame_data)):
             self.filtered_frame_data[f_idx][2].save(f"outputs/{f_idx}.webp")
             cv2.imwrite(
@@ -30,7 +60,7 @@ class VideoAnalyser:
                 f"outputs/{f_idx}_diffmap.webp", self.filtered_frame_data[f_idx][1][0]
             )
 
-    def _calculate_scores(self):
+    def _calculate_frame_scores(self):
         if self.video_detail_score and self.video_diff_score and self.selected_frame:
             return (self.video_detail_score, self.video_diff_score, self.selected_frame)
 
