@@ -144,8 +144,13 @@ class VideoDownloader:
         ]
 
         # Asynchronously get all the thumbnails
-        frames = await asyncio.gather(
-            *(self._get_image_from_url(url) for url in thumbnail_urls),
+        frames = (
+            result  # Get the other images even if one fails
+            for result in await asyncio.gather(
+                *(self._get_image_from_url(url) for url in thumbnail_urls),
+                return_exceptions=True,  # Don't cancel the gather op if a task fails
+            )
+            if isinstance(result, Image.Image)  # Filter out the exception objects
         )
 
         # Thumbnails could come in different resolutions
@@ -165,13 +170,18 @@ class VideoDownloader:
         fragment_step_size = (sb_rows * sb_cols * num_fragments) // self.FRAME_LIMIT
 
         # Get all storyboard images asynchronously
-        storyboard_fragments = await asyncio.gather(
-            *map(
-                self._get_image_from_url,
-                list(map(lambda x: x["url"], self.video_storyboard_info["fragments"]))[
-                    ::fragment_step_size
-                ],
+        storyboard_fragments = (
+            result  # Get the other images even if one fails
+            for result in await asyncio.gather(
+                (
+                    self._get_image_from_url(url)
+                    for url in list(
+                        map(lambda x: x["url"], self.video_storyboard_info["fragments"])
+                    )[::fragment_step_size]
+                ),
+                return_exceptions=True,  # Don't stop gather if a task fails
             )
+            if isinstance(result, Image.Image)  # Filter out exceptions
         )
 
         sb_width = self.video_storyboard_info["width"]
