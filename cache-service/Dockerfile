@@ -1,15 +1,14 @@
 # syntax=docker/dockerfile:1 
 
-FROM node:18-bookworm as base
+FROM node:18-alpine as base
 WORKDIR /app
 
 COPY package-lock.json package.json ./
 
-RUN apt-get update \
-  && apt-get install --no-install-recommends -y libopencv-dev
+RUN apk update \
+  && apk add
 
-RUN npm ci \
-  && npx build-opencv --nobuild rebuild
+RUN npm ci 
 
 COPY . .
 RUN npm run build
