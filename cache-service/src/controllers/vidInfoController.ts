@@ -1,12 +1,18 @@
 import { NextFunction, Request, Response } from "express";
 import { VidInfoModel } from "../models/VidInfo";
-import { getVideoAnalysis } from "../helpers/VideoAnalyser";
+import axios from "axios";
+
+type VideoScores = {
+  categoryScores: { [key: string]: number };
+  frameScores: { [key: string]: number };
+  keywordScores: { [key: string]: number };
+};
 
 // if vidInfo is not found in DB, obtain from classification and save to DB
 export const getVidInfo = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const videoID = req.params.videoid;
   const vidInfo = await VidInfoModel.findById(videoID);
@@ -20,18 +26,20 @@ export const getVidInfo = async (
   if (vidInfo) return res.json(vidInfo);
 
   // get video info from model and analysis
-  // retrieve image frame from user???
   const categoryKeywords = JSON.parse(
-    req.query.categoryKeywords ? req.query.categoryKeywords.toString() : "",
+    req.query.categoryKeywords ? req.query.categoryKeywords.toString() : ""
   );
-  const { categoryScores, frameScores, keywordScores } = await getVideoAnalysis(
-    videoID,
-    categoryKeywords,
+
+  const params = { video_id: videoID, category_keywords: categoryKeywords };
+  const videoScores: VideoScores = await axios.get(
+    `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
+    { params }
   );
+
   res.locals.videoID = videoID;
-  res.locals.categoryScores = categoryScores;
-  res.locals.frameScores = frameScores;
-  res.locals.keywordScores = keywordScores;
+  res.locals.categoryScores = videoScores.categoryScores;
+  res.locals.frameScores = videoScores.frameScores;
+  res.locals.keywordScores = videoScores.keywordScores;
   next();
 };
 
@@ -40,7 +48,7 @@ export const createVidInfo = async (req: Request, res: Response) => {
 
   if (res.locals.videoID)
     data = {
-      _id: req.params.videoid,
+      _id: res.locals.videoID,
       categoryScores: res.locals.categoryScores,
       frameScores: res.locals.frameScores,
       keywordScores: res.locals.keywordScores,
@@ -61,7 +69,7 @@ export const updateVidInfo = async (req: Request, res: Response) => {
     new VidInfoModel({
       ...vidInfo,
       ...req.body,
-    }),
+    })
   );
   res.json(response);
 };
