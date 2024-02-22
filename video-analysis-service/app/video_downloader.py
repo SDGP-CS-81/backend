@@ -173,7 +173,7 @@ class VideoDownloader:
         storyboard_fragments = (
             result  # Get the other images even if one fails
             for result in await asyncio.gather(
-                (
+                *(
                     self._get_image_from_url(url)
                     for url in list(
                         map(lambda x: x["url"], self.video_storyboard_info["fragments"])
