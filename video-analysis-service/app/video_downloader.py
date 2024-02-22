@@ -13,10 +13,12 @@ class VideoDownloader:
 
     Attributes
     ----------
-    YT_URL : str
-        a base url string that is used when making requests
     HTTP_CLIENT : httpx.AsyncClient
         a client object for making async requests
+    HTTP_TIMEOUT : int
+        a network timeout that is used when getting frames,
+        keep this at a reasonable level to allow for slow sources
+        without letting it get too long
     FRAME_LIMIT : int
         a loosely followed upper limit for the amount of frames downloaded
     DEFAULT_FRAME_SIZE : (int, int)
@@ -44,9 +46,9 @@ class VideoDownloader:
         or the thumbnails for the video
     """
 
-    YT_URL = "https://www.youtube.com/watch?v="
     # It's better to close this when the server exits or crashes
-    HTTP_CLIENT = httpx.AsyncClient()
+    HTTP_TIMEOUT = 20
+    HTTP_CLIENT = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
     FRAME_LIMIT = 50
     DEFAULT_FRAME_SIZE = (1280, 720)
 
@@ -134,14 +136,14 @@ class VideoDownloader:
         if self.video_info is None:
             raise VideoDownloaderError
 
-        thumbnail_urls = [
+        thumbnail_urls = (
             thumb_info["url"]
             for thumb_info in self.video_info["thumbnails"]
             # Don't use thumbnails with a very low preference score
             # These thumbnails usually just use a gray placeholder
             # and mess up the detail and diff calculations
             if thumb_info["preference"] > -10
-        ]
+        )
 
         # Asynchronously get all the thumbnails
         frames = (
@@ -155,9 +157,7 @@ class VideoDownloader:
 
         # Thumbnails could come in different resolutions
         # Resize them so that they are all consistent
-        resized_frames = [frame.resize(self.DEFAULT_FRAME_SIZE) for frame in frames]
-
-        return resized_frames
+        return [frame.resize(self.DEFAULT_FRAME_SIZE) for frame in frames]
 
     async def _get_storyboard_frames(self):
         if self.video_storyboard_info is None:
@@ -173,11 +173,11 @@ class VideoDownloader:
         storyboard_fragments = (
             result  # Get the other images even if one fails
             for result in await asyncio.gather(
-                (
+                *(
                     self._get_image_from_url(url)
-                    for url in list(
-                        map(lambda x: x["url"], self.video_storyboard_info["fragments"])
-                    )[::fragment_step_size]
+                    for url in [
+                        x["url"] for x in self.video_storyboard_info["fragments"]
+                    ][::fragment_step_size]
                 ),
                 return_exceptions=True,  # Don't stop gather if a task fails
             )
@@ -198,7 +198,6 @@ class VideoDownloader:
         )
 
         # Flatten the resulting [[Image, ...], ...] array into a [Image, ...] array
-        # and cache the result
         self.video_frames = [frame for frames in storyboard_frames for frame in frames]
         return self.video_frames
 
@@ -225,15 +224,14 @@ class VideoDownloader:
 
         # Get only the storyboard streams and sort them by the highest quality
         # storyboard, which is usually sb0
-        self.video_storyboard_info = list(
-            sorted(
-                filter(
-                    # Only get the storyboard streams
-                    lambda x: "sb" in x["format_id"],
-                    self.video_info["formats"],
-                ),
-                key=lambda x: x["format_id"],
-            )
+        self.video_storyboard_info = sorted(
+            (
+                # Only get the storyboard streams
+                x
+                for x in self.video_info["formats"]
+                if "sb" in x["format_id"]
+            ),
+            key=lambda x: x["format_id"],
         )[0]
 
     @staticmethod
@@ -243,22 +241,18 @@ class VideoDownloader:
 
     @staticmethod
     def _extract_frames(storyboard, cols, rows, width, height):
-        frames = []
-
-        for row in range(rows):
-            for col in range(cols):
-                frames.append(
-                    storyboard.crop(
-                        (
-                            width * col,  # Left coordinate
-                            height * row,  # Upper
-                            width * (col + 1),  # Right
-                            height * (row + 1),  # Lower
-                        )
-                    )
+        return [
+            storyboard.crop(
+                (
+                    width * col,  # Left
+                    height * row,  # Upper
+                    width * (col + 1),  # Right
+                    height * (row + 1),  # Lower
                 )
-
-        return frames
+            )
+            for row in range(rows)
+            for col in range(cols)
+        ]
 
 
 class VideoDownloaderError(Exception):
