@@ -5,9 +5,6 @@ WORKDIR /app
 
 COPY package-lock.json package.json ./
 
-RUN apk update \
-  && apk add
-
 RUN npm ci 
 
 COPY . .
