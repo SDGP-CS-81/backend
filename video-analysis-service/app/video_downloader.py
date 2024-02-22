@@ -15,6 +15,10 @@ class VideoDownloader:
     ----------
     HTTP_CLIENT : httpx.AsyncClient
         a client object for making async requests
+    HTTP_TIMEOUT : int
+        a network timeout that is used when getting frames,
+        keep this at a reasonable level to allow for slow sources
+        without letting it get too long
     FRAME_LIMIT : int
         a loosely followed upper limit for the amount of frames downloaded
     DEFAULT_FRAME_SIZE : (int, int)
@@ -43,7 +47,8 @@ class VideoDownloader:
     """
 
     # It's better to close this when the server exits or crashes
-    HTTP_CLIENT = httpx.AsyncClient()
+    HTTP_TIMEOUT = 20
+    HTTP_CLIENT = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
     FRAME_LIMIT = 50
     DEFAULT_FRAME_SIZE = (1280, 720)
 

@@ -72,7 +72,7 @@ class VideoAnalyser:
 
         result = await asyncio.to_thread(self._calculate_frame_scores)
         # Uncomment the below line to dump the analysed data onto disk
-        await asyncio.to_thread(self._save_to_disk)
+        # await asyncio.to_thread(self._save_to_disk)
 
         return result
 
