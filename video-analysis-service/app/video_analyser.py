@@ -95,15 +95,11 @@ class VideoAnalyser:
             a map of categories to their keyword occurence scores
         """
 
-        # Initialize the dictionary with 0 for scores
-        keyword_scores = {key: 0 for key in keywords.keys()}
-
-        for key in keywords.keys():
-            matched_scores = list(
-                filter(
-                    # Filter out any keywords that didn't have occurences
-                    lambda x: x > 0,
-                    [
+        return {
+            key: len(  # Use the number of non-zero keyword hits as the score
+                [
+                    score
+                    for score in (
                         len(  # Get the number of occurences
                             re.findall(
                                 # Match each keyword
@@ -116,14 +112,12 @@ class VideoAnalyser:
                             )
                         )
                         for value in keywords[key]
-                    ],
-                )
+                    )
+                    if score > 0  # Filter out any keywords that didn't have occurences
+                ]
             )
-
-            # Use the number of non zero keyword hits as the score
-            keyword_scores[key] = len(matched_scores)
-
-        return keyword_scores
+            for key in keywords.keys()
+        }
 
     def _save_to_disk(self):
         if self.selected_frame:
@@ -148,27 +142,28 @@ class VideoAnalyser:
         self._generate_diff_maps()
 
         # Get the stdev and mean of the diff scores in order to filter outliers
-        diff_sum = list(map(lambda x: x[1], self.frame_diff_maps))
+        diff_sum = [x[1] for x in self.frame_diff_maps]
         diff_stdev = statistics.stdev(diff_sum)
         diff_mean = statistics.mean(diff_sum)
 
         diff_lower_bound = diff_mean - diff_stdev
         diff_upper_bound = diff_mean + diff_stdev
 
-        self.filtered_frame_data = list(
-            filter(
-                # Filter the outliers
-                lambda x: x[1][1] <= diff_upper_bound and x[1][1] >= diff_lower_bound,
+        self.filtered_frame_data = sorted(
+            (
+                x
                 # Keep the data together before filtering
-                zip(
+                for x in zip(
                     self.frame_edge_maps,
                     self.frame_diff_maps,
                     self.video_frames,
-                ),
-            )
+                )
+                # Filter the outliers
+                if x[1][1] <= diff_upper_bound and x[1][1] >= diff_lower_bound
+            ),
+            key=lambda x: x[1][1],
         )
 
-        self.filtered_frame_data.sort(key=lambda x: x[1][1])
         # Pick the median
         selected_data = self.filtered_frame_data[len(self.filtered_frame_data) // 2]
         self.video_detail_score = selected_data[0][1]
@@ -182,33 +177,36 @@ class VideoAnalyser:
         if len(self.frame_edge_maps) > 0:
             return
 
-        for video_frame in self.video_frames:
-            # Generate edge maps using the laplacian operator
-            edge_map = cv2.Laplacian(
-                # Load the PIL image as a grayscale opencv matrix
-                cv2.cvtColor(numpy.array(video_frame), cv2.COLOR_RGB2GRAY),
-                cv2.CV_64F,
-            )
-
-            self.frame_edge_maps.append((edge_map, edge_map.var()))
+        self.frame_edge_maps = sorted(
+            (
+                (edge_map, edge_map.var())
+                for edge_map in (
+                    # Generate edge maps using the laplacian operator
+                    cv2.Laplacian(
+                        # Load the PIL image as a grayscale opencv matrix
+                        cv2.cvtColor(numpy.array(video_frame), cv2.COLOR_RGB2GRAY),
+                        cv2.CV_64F,
+                    )
+                    for video_frame in self.video_frames
+                )
+            ),
+            key=lambda x: x[1],
+        )
 
         # Stuff needed to filter outliers
-        edge_var = list(map(lambda x: x[1], self.frame_edge_maps))
+        edge_var = [x[1] for x in self.frame_edge_maps]
         edge_mean = statistics.mean(edge_var)
         edge_stddev = statistics.stdev(edge_var)
 
         edge_upper_bound = edge_mean + edge_stddev
         edge_lower_bound = edge_mean - edge_stddev
 
-        self.frame_edge_maps = list(
-            filter(
-                # Filter outliers
-                lambda x: x[1] <= edge_upper_bound and x[1] >= edge_lower_bound,
-                self.frame_edge_maps,
-            )
-        )
-
-        self.frame_edge_maps.sort(key=lambda x: x[1])
+        self.frame_edge_maps = [
+            x
+            for x in self.frame_edge_maps
+            # Filter outliers
+            if x[1] <= edge_upper_bound and x[1] >= edge_lower_bound
+        ]
 
     def _generate_diff_maps(self):
         # We need the edge maps to be already generated
@@ -225,11 +223,14 @@ class VideoAnalyser:
         # the maps sorted by detail level
         ref_frame = self.frame_edge_maps[0][0]
 
-        for edge_map in self.frame_edge_maps:
-            # Getting the absolute difference map
-            diff_map = cv2.absdiff(ref_frame, edge_map[0])
-
-            self.frame_diff_maps.append((diff_map, diff_map.sum()))
+        self.frame_diff_maps = [
+            (diff_map, diff_map.sum())
+            for diff_map in (
+                # Getting the absolute difference map
+                cv2.absdiff(ref_frame, edge_map[0])
+                for edge_map in self.frame_edge_maps
+            )
+        ]
 
 
 class VideoAnalyserError(Exception):
