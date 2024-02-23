@@ -1,0 +1,16 @@
+services:
+  cache-service:
+    image: cache
+    ports:
+      - "5000:5000"
+    network_mode: "host"
+    environment:
+      - MONGODB_URI=$MONGODB_URI
+      - VIDEO_ANALYSIS_SERVICE_URI=$VIDEO_ANALYSIS_SERVICE_URI
+  video-analysis-service:
+    image: video
+    ports:
+      - "8000:8000"
+    network_mode: "host"
+    environment:
+      - YT_API_KEY=$YT_API_KEY
