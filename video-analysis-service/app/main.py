@@ -31,10 +31,9 @@ async def video_analysis_route(video_id: str, category_keywords: Json):
     )
 
     response_data = {
-        "video_id": video_id,
-        "category_scores": {key: 0 for key in ImageClassifier.CLASS_NAMES},
-        "frame_scores": {"detail_score": 0, "diff_score": 0},
-        "keyword_scores": keyword_scores,
+        "categoryScores": {key: 0 for key in ImageClassifier.CLASS_NAMES},
+        "frameScores": {"detailScore": 0, "diffScore": 0},
+        "keywordScores": keyword_scores,
     }
 
     # Hack to use YT category to boost score and exit early
@@ -56,10 +55,10 @@ async def video_analysis_route(video_id: str, category_keywords: Json):
 
     category_scores = await ImageClassifier.classify_frame(selected_frame)
 
-    response_data["category_scores"] = category_scores
-    response_data["frame_scores"] = {
-        "detail_score": detail_score,
-        "diff_score": diff_score,
+    response_data["categoryScores"] = category_scores
+    response_data["frameScores"] = {
+        "detailScore": detail_score,
+        "diffScore": diff_score,
     }
 
     return response_data
