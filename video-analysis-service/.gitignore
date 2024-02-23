@@ -1,7 +1,4 @@
-*.h5
 /my-venv
-model
-model/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
