@@ -26,15 +26,13 @@ export const getVidInfo = async (
   if (vidInfo) return res.json(vidInfo);
 
   // get video info from model and analysis
-  const categoryKeywords = JSON.parse(
-    req.query.categoryKeywords ? req.query.categoryKeywords.toString() : ""
-  );
+  const categoryKeywords = req.query.categoryKeywords ? req.query.categoryKeywords.toString() : "";
 
   const params = { video_id: videoID, category_keywords: categoryKeywords };
-  const videoScores: VideoScores = await axios.get(
+  const videoScores: VideoScores = (await axios.get(
     `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
     { params }
-  );
+  )).data;
 
   res.locals.videoID = videoID;
   res.locals.categoryScores = videoScores.categoryScores;
