@@ -29,17 +29,18 @@ class ImageClassifier:
             self._input_details = self._interpreter.get_input_details()[0]
             self._output_details = self._interpreter.get_output_details()[0]
             
-    @staticmethod
-    async def classify_frame(frame):
-        resized_frame = frame.resize(ImageClassifier.IMAGE_DIMENSION)
+    async def classify_frame(self,frame):
 
+        resized_frame = frame.resize(ImageClassifier.IMAGE_DIMENSION)
         numpy_image = np.array(resized_frame).reshape(
             (ImageClassifier.IMAGE_DIMENSION + (3,))
         )
+        
+        prediction_array = np.expand_dims(numpy_image, axis=0).astype(self._input_details["dtype"])
+        self._interpreter.set_tensor(self._input_details["index"], prediction_array)
+        self._interpreter.invoke()
+        prediction = self._interpreter.get_tensor(self._output_details["index"])[0]
 
-        prediction_array = np.array([numpy_image])
-        prediction_batch = ImageClassifier.MODEL.predict(prediction_array)
-        prediction = prediction_batch[0]
         category_scores = {
             class_name: float(score)
             for class_name, score in zip(ImageClassifier.CLASS_NAMES, prediction)
