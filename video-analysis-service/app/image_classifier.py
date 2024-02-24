@@ -1,10 +1,8 @@
 import numpy as np
-from keras.models import load_model
-
+import tflite_runtime.interpreter as tflite
 
 class ImageClassifier:
-    MODEL_PATH = "./model/model.h5"
-    MODEL = load_model(MODEL_PATH, compile=True)
+    MODEL_PATH = "model/model.tflite"
     CLASS_NAMES = [
         "lowGraphics",
         "lowLight",
