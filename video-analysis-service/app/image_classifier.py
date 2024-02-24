@@ -14,6 +14,21 @@ class ImageClassifier:
     ]
     IMAGE_DIMENSION = (224, 224)
 
+    __instance = None
+    def __new__(cls):
+        if (cls.__instance is None):
+            cls.__instance = super(ImageClassifier,cls).__new__(cls)
+
+        return cls.__instance
+    
+    def __init__(self):
+        if (self.__instance is not None):
+            self._interpreter = tflite.Interpreter(model_path=ImageClassifier.MODEL_PATH)
+            self._interpreter.allocate_tensors()
+
+            self._input_details = self._interpreter.get_input_details()[0]
+            self._output_details = self._interpreter.get_output_details()[0]
+            
     @staticmethod
     async def classify_frame(frame):
         resized_frame = frame.resize(ImageClassifier.IMAGE_DIMENSION)
