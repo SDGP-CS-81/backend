@@ -12,5 +12,5 @@ app.use(cors());
 app.use("/api", vidInfoRouter);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello world");
+  res.status(404).send("Prefix API routes with '/api'");
 });
