@@ -4,6 +4,7 @@ from pydantic import Json
 from app.video_analyser import VideoAnalyser
 from app.video_downloader import VideoDownloader
 from app.image_classifier import ImageClassifier
+import asyncio
 
 app = FastAPI()
 # Restrict this when we deploy
@@ -53,7 +54,9 @@ async def video_analysis_route(video_id: str, category_keywords: Json):
         selected_frame,
     ) = await vid_analyser.calculate_frame_scores()
 
-    category_scores = await ImageClassifier().classify_frame(selected_frame)
+    category_scores = await asyncio.to_thread(
+        ImageClassifier().classify_frame, selected_frame
+    )
 
     response_data["categoryScores"] = category_scores
     response_data["frameScores"] = {

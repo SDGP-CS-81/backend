@@ -8,3 +8,4 @@ yt-dlp==2023.12.30
 httpx==0.26
 opencv-python-headless>=4.9
 tflite-runtime==2.14.0
+gdown==5.1.0
