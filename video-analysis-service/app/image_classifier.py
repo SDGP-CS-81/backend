@@ -8,10 +8,10 @@ class ImageClassifier:
         "lowGraphics",
         "lowLight",
         "nature",
+        "news",
         "person",
         "sports",
         "textHeavy",
-        "news",
     ]
     IMAGE_DIMENSION = (224, 224)
 
