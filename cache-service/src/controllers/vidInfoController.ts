@@ -12,7 +12,7 @@ type VideoScores = {
 export const getVidInfo = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const videoID = req.params.videoid;
   const vidInfo = await VidInfoModel.findById(videoID);
@@ -26,13 +26,19 @@ export const getVidInfo = async (
   if (vidInfo) return res.json(vidInfo);
 
   // get video info from model and analysis
-  const categoryKeywords = req.query.categoryKeywords ? req.query.categoryKeywords.toString() : "";
+  const params: { [key: string]: string } = { video_id: videoID };
 
-  const params = { video_id: videoID, category_keywords: categoryKeywords };
-  const videoScores: VideoScores = (await axios.get(
-    `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
-    { params }
-  )).data;
+  // add category keywords if they exist
+  if (req.query.categoryKeywords) {
+    params["category_keywords"] = req.query.categoryKeywords.toString();
+  }
+
+  const videoScores: VideoScores = (
+    await axios.get(
+      `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
+      { params },
+    )
+  ).data;
 
   res.locals.videoID = videoID;
   res.locals.categoryScores = videoScores.categoryScores;
@@ -67,7 +73,7 @@ export const updateVidInfo = async (req: Request, res: Response) => {
     new VidInfoModel({
       ...vidInfo,
       ...req.body,
-    })
+    }),
   );
   res.json(response);
 };
