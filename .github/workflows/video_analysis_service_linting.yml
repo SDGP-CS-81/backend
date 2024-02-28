@@ -1,4 +1,4 @@
-name: Video Analysis Service Tests
+name: Video Analysis Service Linting
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - "cache-service/**"
 
 jobs:
-  build-and-test-video-analysis:
+  lint-video-analysis:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -26,6 +26,7 @@ jobs:
         run: pip install -r requirements.txt
         working-directory: ./video-analysis-service
 
-      - name: Run tests
-        run: python -m unittest discover -s tests
-        working-directory: ./video-analysis-service
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff --output-format=github .
