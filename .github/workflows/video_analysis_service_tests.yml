@@ -1,10 +1,6 @@
 name: Video Analysis Service Tests
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "cache-service/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -24,6 +20,12 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+        working-directory: ./video-analysis-service
+
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff --output-format=github .
         working-directory: ./video-analysis-service
 
       - name: Run tests
