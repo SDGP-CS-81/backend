@@ -28,7 +28,7 @@ class ImageClassifier:
         # check if interpreter instantiated in instance, if not set interpreter and details
         try:
             self._interpreter
-        except:
+        except AttributeError:
             # load model through interpreter api
             self._interpreter = tflite.Interpreter(
                 model_path=ImageClassifier.MODEL_PATH

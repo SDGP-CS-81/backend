@@ -48,7 +48,7 @@ class ImageClassifierTest(TestCase):
         image = Image.open(self.dataset_dir.glob("*/*.png").__next__())
 
         start = time.time()
-        result = ImageClassifier().classify_frame(image)
+        ImageClassifier().classify_frame(image)
         total_time = time.time() - start
 
         self.assertGreaterEqual(
@@ -67,7 +67,7 @@ class ImageClassifierTest(TestCase):
             for image in list(self.dataset_dir.glob("*/*.png"))[: self.BATCH_SIZE]
         ):
             start = time.time()
-            result = ImageClassifier().classify_frame(image)
+            ImageClassifier().classify_frame(image)
             total_time = time.time() - start
             total_times.append(total_time)
 
