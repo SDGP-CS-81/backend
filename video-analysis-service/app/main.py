@@ -23,12 +23,14 @@ def root_route():
 
 
 @app.get("/video-analysis")
-async def video_analysis_route(video_id: str, category_keywords: Json):
+async def video_analysis_route(video_id: str, category_keywords: Json | None = None):
     vid_dl = VideoDownloader(video_id)
     video_category, video_text_data = await vid_dl.get_video_text_info()
 
-    keyword_scores = VideoAnalyser.calculate_text_scores(
-        video_text_data, category_keywords
+    keyword_scores = (
+        VideoAnalyser.calculate_text_scores(video_text_data, category_keywords)
+        if category_keywords is not None
+        else {}
     )
 
     response_data = {
