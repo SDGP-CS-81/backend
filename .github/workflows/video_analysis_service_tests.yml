@@ -1,7 +1,11 @@
-name: Video Analysis Service Test Pipeline
+name: Video Analysis Service Tests
 
 on:
   push:
+    branches: [main, tests-ruff-linting]
+    paths-ignore:
+      - "cache-service/**"
+  pull_request:
     branches: [main]
     paths-ignore:
       - "cache-service/**"
