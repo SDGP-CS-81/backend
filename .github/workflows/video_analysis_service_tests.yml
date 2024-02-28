@@ -1,10 +1,6 @@
 name: Video Analysis Service Tests
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "cache-service/**"
   pull_request:
     branches: [main]
     paths-ignore:
