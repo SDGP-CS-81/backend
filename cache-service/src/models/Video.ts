@@ -13,7 +13,7 @@ const categoryProbabailities = new Schema(
   { _id: false }
 );
 
-const vidInfoSchema = new Schema({
+const videoSchema = new Schema({
   _id: {
     type: String,
     required: true,
@@ -31,10 +31,6 @@ const vidInfoSchema = new Schema({
     type: Object,
     required: false,
   },
-  userRated: {
-    type: String,
-    required: false,
-  },
 });
 
-export const VidInfoModel = model("vidinfo", vidInfoSchema);
+export const VideoModel = model("video", videoSchema);
