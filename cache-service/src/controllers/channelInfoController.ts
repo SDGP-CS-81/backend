@@ -11,16 +11,19 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
       let channel = await Channel.findOne({ channelId });
 
       if (!channel) {
-          channel = new Channel({ channelId, categories: {} });
+          channel = new Channel({ channelId });
       }
 
-      // initialize category count if not present
+      // if the category doesn't exist in the channel, return an error
       if (channel.categories && channel.categories[category] === undefined) {
-          channel.categories[category] = 0;
+        return res.status(409).json({ message: 'Invalid category' });
       }
 
       // increment the vote count for the specified category
       channel.categories[category]++;
+
+      // mark the 'categories' field as modified
+      channel.markModified('categories');
 
       console.log(`Vote count for category ${category} in channel ${channelId}: ${channel.categories[category]}`);
 

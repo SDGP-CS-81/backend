@@ -11,7 +11,7 @@ app.use(cors());
 
 // routes
 app.use("/api", vidInfoRouter);
-app.use("/channel", channelInfoRouter);
+app.use("/api/channel", channelInfoRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello world");
