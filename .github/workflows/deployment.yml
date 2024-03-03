@@ -2,7 +2,7 @@ name: Deployment
 
 on:
   workflow_run:
-    workflows: [CI Pipeline]
+    workflows: [Backend Docker Build]
     types:
       - completed
 
