@@ -1,0 +1,20 @@
+name: Deployment
+
+on:
+  workflow_run:
+    workflows: [CI Pipeline]
+    types:
+      - completed
+
+jobs:
+  Deploy:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - name: Pull latest docker images
+        run: docker compose pull
+      - name: Delete old docker container
+        run: docker compose down
+      - name: Run docker container
+        run: docker compose up -d
+      - name: Remove outdated docker images
+        run: docker image prune
