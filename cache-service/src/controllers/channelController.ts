@@ -1,17 +1,22 @@
 import { Request, Response } from "express";
-import { ChannelModel } from "../models/Channel";
+import { CategoriesDocument, Channel } from "../models/Channel";
+
+type IncrementVoteCountBody = {
+  channelId: string;
+  category: keyof CategoriesDocument;
+};
 
 export const incrementVoteCount = async (req: Request, res: Response) => {
-  const { channelId, category } = req.body;
+  const { channelId, category }: IncrementVoteCountBody = req.body;
   if (!channelId || !category) {
     return res.status(400).json({ error: "Missing channelId or category" });
   }
 
   try {
-    let channel = await ChannelModel.findOne({ channelId });
+    let channel = await Channel.findById(channelId);
 
     if (!channel) {
-      channel = new ChannelModel({ channelId });
+      channel = new Channel({ _id: channelId });
     }
 
     // if the category doesn't exist in the channel, return an error
@@ -21,9 +26,6 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
 
     // increment the vote count for the specified category
     channel.categories[category]++;
-
-    // mark the 'categories' field as modified
-    channel.markModified("categories");
 
     console.log(
       `Vote count for category ${category} in channel ${channelId}: ${channel.categories[category]}`
