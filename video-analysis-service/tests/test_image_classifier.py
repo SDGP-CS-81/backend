@@ -17,7 +17,7 @@ class ImageClassifierTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        dataset_id = "1ne623_uXIf_XEUuHJGHmNMynSP27qd5c"
+        dataset_id = "1CEUREAArZWenn7q3FOr9FapwtwaQPvpk"
         dataset_file = Path("dataset.zip")
         cls.dataset_dir = Path("dataset/")
 
