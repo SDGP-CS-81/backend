@@ -1,6 +1,16 @@
 import { Schema, model } from "mongoose";
 
-const categoryProbabailities = new Schema(
+export type CategoryScores = Document & {
+  lowGraphics: number;
+  lowLight: number;
+  nature: number;
+  person: number;
+  sports: number;
+  textHeavy: number;
+  news: number;
+};
+
+const categoryScores = new Schema<CategoryScores>(
   {
     lowGraphics: Number,
     lowLight: Number,
@@ -13,24 +23,39 @@ const categoryProbabailities = new Schema(
   { _id: false }
 );
 
-const videoSchema = new Schema({
+export type FrameScores = Document & { [key: string]: number };
+
+const frameScores = new Schema<FrameScores>({}, { _id: false });
+
+export type KeywordScores = Document & { [key: string]: number };
+
+const keywordScores = new Schema<KeywordScores>({}, { _id: false });
+
+export type VideoDocument = Document & {
+  _id: string;
+  categoryScores: CategoryScores;
+  frameScores: FrameScores;
+  keywordScores: KeywordScores;
+};
+
+const videoSchema = new Schema<VideoDocument>({
   _id: {
     type: String,
     required: true,
   },
   categoryScores: {
-    type: categoryProbabailities,
+    type: categoryScores,
     required: false,
   },
   // choose better name for this perhaps
   frameScores: {
-    type: Object,
+    type: frameScores,
     required: false,
   },
   keywordScores: {
-    type: Object,
+    type: keywordScores,
     required: false,
   },
 });
 
-export const VideoModel = model("video", videoSchema);
+export const Video = model<VideoDocument>("Video", videoSchema);
