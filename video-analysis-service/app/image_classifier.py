@@ -5,7 +5,7 @@ import tflite_runtime.interpreter as tflite
 class ImageClassifier:
     MODEL_PATH = "model/model.tflite"
     CLASS_NAMES = [
-        "lowGraphics",
+        "graphics",
         "lowLight",
         "nature",
         "news",
@@ -53,9 +53,9 @@ class ImageClassifier:
         self._interpreter.invoke()
         prediction = self._interpreter.get_tensor(self._output_details["index"])[0]
 
-        category_scores = {
+        image_scores = {
             class_name: float(score)
             for class_name, score in zip(ImageClassifier.CLASS_NAMES, prediction)
         }
 
-        return category_scores
+        return image_scores

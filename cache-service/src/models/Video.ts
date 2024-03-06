@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
-export type CategoryScores = Document & {
-  lowGraphics: number;
+export type ImageScores = Document & {
+  graphics: number;
   lowLight: number;
   nature: number;
   person: number;
@@ -10,9 +10,9 @@ export type CategoryScores = Document & {
   news: number;
 };
 
-const categoryScores = new Schema<CategoryScores>(
+const imageScores = new Schema<ImageScores>(
   {
-    lowGraphics: Number,
+    graphics: Number,
     lowLight: Number,
     nature: Number,
     person: Number,
@@ -27,15 +27,15 @@ export type FrameScores = Document & { [key: string]: number };
 
 const frameScores = new Schema<FrameScores>({}, { _id: false });
 
-export type KeywordScores = Document & { [key: string]: number };
+export type TextScores = Document & { [key: string]: number };
 
-const keywordScores = new Schema<KeywordScores>({}, { _id: false });
+const textScores = new Schema<TextScores>({}, { _id: false });
 
 export type VideoDocument = Document & {
   _id: string;
-  categoryScores: CategoryScores;
+  imageScores: ImageScores;
   frameScores: FrameScores;
-  keywordScores: KeywordScores;
+  textScores: TextScores;
 };
 
 const videoSchema = new Schema<VideoDocument>({
@@ -43,8 +43,8 @@ const videoSchema = new Schema<VideoDocument>({
     type: String,
     required: true,
   },
-  categoryScores: {
-    type: categoryScores,
+  imageScores: {
+    type: imageScores,
     required: false,
   },
   // choose better name for this perhaps
@@ -52,8 +52,8 @@ const videoSchema = new Schema<VideoDocument>({
     type: frameScores,
     required: false,
   },
-  keywordScores: {
-    type: keywordScores,
+  textScores: {
+    type: textScores,
     required: false,
   },
 });

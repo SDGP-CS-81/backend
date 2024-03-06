@@ -13,12 +13,6 @@ export const getVideo = async (
   const videoID = req.params.videoid;
   const video = await Video.findById(videoID);
 
-  if (video && !video.categoryScores) {
-    // if video is found in DB, but has no categoryProbabilities, only userRated,
-    // then get categoryProbabilities from classification and save to DB
-    return res.json(video);
-  }
-
   if (video) return res.json(video);
 
   // get video info from model and analysis
@@ -37,9 +31,9 @@ export const getVideo = async (
   ).data;
 
   res.locals.videoID = videoID;
-  res.locals.categoryScores = videoScores.categoryScores;
+  res.locals.imageScores = videoScores.imageScores;
   res.locals.frameScores = videoScores.frameScores;
-  res.locals.keywordScores = videoScores.keywordScores;
+  res.locals.textScores = videoScores.textScores;
   next();
 };
 
@@ -49,9 +43,9 @@ export const createVideo = async (req: Request, res: Response) => {
   if (res.locals.videoID)
     data = {
       _id: res.locals.videoID,
-      categoryScores: res.locals.categoryScores,
+      imageScores: res.locals.imageScores,
       frameScores: res.locals.frameScores,
-      keywordScores: res.locals.keywordScores,
+      textScores: res.locals.textScores,
     };
 
   const newVideo = await Video.create(data);

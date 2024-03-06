@@ -17,39 +17,39 @@ class VideoAnalyserTest(IsolatedAsyncioTestCase):
             "coding": ["programming", "java", "javascript", "c#", "c++"],
         }
 
-    def test_keyword_scores(self):
+    def test_text_scores(self):
         """
         Test to ensure that the keyword scoring algorithm works as expected
         """
         test_data = "This is a programming video about the java programming language. We will also be looking at it's similarity to C#"
-        keyword_scores = VideoAnalyser.calculate_text_scores(test_data, self.keywords)
+        text_scores = VideoAnalyser.calculate_text_scores(test_data, self.keywords)
 
-        self.assertEqual(0, keyword_scores["music"], "Expected no matches for music!")
-        self.assertEqual(3, keyword_scores["coding"], "Expected 3 matches for coding!")
+        self.assertEqual(0, text_scores["music"], "Expected no matches for music!")
+        self.assertEqual(3, text_scores["coding"], "Expected 3 matches for coding!")
 
-    def test_keyword_scores_case_insensitive_upper(self):
+    def test_text_scores_case_insensitive_upper(self):
         """
         Test to ensure that keywords are checked with case insensitivity
         """
         test_data = "This is a programming video about the java programming language. We will also be looking at it's similarity to C#"
-        keyword_scores = VideoAnalyser.calculate_text_scores(
+        text_scores = VideoAnalyser.calculate_text_scores(
             test_data.upper(), self.keywords
         )
 
-        self.assertEqual(0, keyword_scores["music"], "Expected no matches for music!")
-        self.assertEqual(3, keyword_scores["coding"], "Expected 3 matches for coding!")
+        self.assertEqual(0, text_scores["music"], "Expected no matches for music!")
+        self.assertEqual(3, text_scores["coding"], "Expected 3 matches for coding!")
 
-    def test_keyword_scores_case_insensitive_lower(self):
+    def test_text_scores_case_insensitive_lower(self):
         """
         Test to ensure that keywords are checked with case insensitivity
         """
         test_data = "This is a programming video about the java programming language. We will also be looking at it's similarity to C#"
-        keyword_scores = VideoAnalyser.calculate_text_scores(
+        text_scores = VideoAnalyser.calculate_text_scores(
             test_data.lower(), self.keywords
         )
 
-        self.assertEqual(0, keyword_scores["music"], "Expected no matches for music!")
-        self.assertEqual(3, keyword_scores["coding"], "Expected 3 matches for coding!")
+        self.assertEqual(0, text_scores["music"], "Expected no matches for music!")
+        self.assertEqual(3, text_scores["coding"], "Expected 3 matches for coding!")
 
     async def test_frame_scores(self):
         """
@@ -75,11 +75,8 @@ class VideoAnalyserTest(IsolatedAsyncioTestCase):
         """
         vid_anl = VideoAnalyser(self.video_frames)
         # Generate the filtered frame data
-        (
-            detail_score,
-            diff_score,
-            selected_frame,
-        ) = await vid_anl.calculate_frame_scores()
+        
+        await vid_anl.calculate_frame_scores()
 
         # Check internal structures to make sure frame duplication has not occured
         self.assertGreaterEqual(
