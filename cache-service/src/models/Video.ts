@@ -23,13 +23,44 @@ const imageScores = new Schema<ImageScores>(
   { _id: false }
 );
 
-export type FrameScores = Document & { [key: string]: number };
+export type FrameScores = Document & { detailScore: number; diffScore: number };
 
-const frameScores = new Schema<FrameScores>({}, { _id: false });
+const frameScores = new Schema<FrameScores>(
+  {
+    detailScore: Number,
+    diffScore: Number,
+  },
+  { _id: false }
+);
 
-export type TextScores = Document & { [key: string]: number };
+export type TextScores = Document & {
+  music: number;
+  podcast: number;
+  gaming: number;
+  news: number;
+  coding: number;
+  sports: number;
+  graphics: number;
+  lifestyle: number;
+  nature: number;
+  demo: number;
+};
 
-const textScores = new Schema<TextScores>({}, { _id: false });
+const textScores = new Schema<TextScores>(
+  {
+    music: Number,
+    podcast: Number,
+    gaming: Number,
+    news: Number,
+    coding: Number,
+    sports: Number,
+    graphics: Number,
+    lifestyle: Number,
+    nature: Number,
+    demo: Number,
+  },
+  { _id: false }
+);
 
 export type VideoDocument = Document & {
   _id: string;
