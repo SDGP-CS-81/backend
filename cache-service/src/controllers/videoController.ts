@@ -1,12 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { VideoModel } from "../models/Video";
+import { Video, VideoDocument } from "../models/Video";
 import axios from "axios";
 
-type VideoScores = {
-  categoryScores: { [key: string]: number };
-  frameScores: { [key: string]: number };
-  keywordScores: { [key: string]: number };
-};
+type VideoScores = Omit<VideoDocument, "_id">;
 
 // if video is not found in DB, obtain from classification and save to DB
 export const getVideo = async (
@@ -15,13 +11,7 @@ export const getVideo = async (
   next: NextFunction
 ) => {
   const videoID = req.params.videoid;
-  const video = await VideoModel.findById(videoID);
-
-  if (video && !video.categoryScores) {
-    // if video is found in DB, but has no categoryProbabilities, only userRated,
-    // then get categoryProbabilities from classification and save to DB
-    return res.json(video);
-  }
+  const video = await Video.findById(videoID);
 
   if (video) return res.json(video);
 
@@ -41,9 +31,9 @@ export const getVideo = async (
   ).data;
 
   res.locals.videoID = videoID;
-  res.locals.categoryScores = videoScores.categoryScores;
+  res.locals.imageScores = videoScores.imageScores;
   res.locals.frameScores = videoScores.frameScores;
-  res.locals.keywordScores = videoScores.keywordScores;
+  res.locals.textScores = videoScores.textScores;
   next();
 };
 
@@ -53,24 +43,24 @@ export const createVideo = async (req: Request, res: Response) => {
   if (res.locals.videoID)
     data = {
       _id: res.locals.videoID,
-      categoryScores: res.locals.categoryScores,
+      imageScores: res.locals.imageScores,
       frameScores: res.locals.frameScores,
-      keywordScores: res.locals.keywordScores,
+      textScores: res.locals.textScores,
     };
 
-  const newVideo = await VideoModel.create(data);
+  const newVideo = await Video.create(data);
 
   res.json(newVideo);
 };
 
 export const updateVideo = async (req: Request, res: Response) => {
-  const video = await VideoModel.findById(req.params.videoid);
+  const video = await Video.findById(req.params.videoid);
 
   if (!video) return res.status(204).json({ message: "Video not found" });
 
-  const response = await VideoModel.updateOne(
+  const response = await Video.updateOne(
     { _id: req.params.videoid },
-    new VideoModel({
+    new Video({
       ...video,
       ...req.body,
     })
@@ -80,6 +70,6 @@ export const updateVideo = async (req: Request, res: Response) => {
 
 // returns null if nothing is found and deleted, return the deleted video if found
 export const deleteVideo = async (req: Request, res: Response) => {
-  const video = await VideoModel.findByIdAndDelete(req.params.videoid);
+  const video = await Video.findByIdAndDelete(req.params.videoid);
   res.json(video);
 };
