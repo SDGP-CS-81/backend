@@ -3,7 +3,6 @@ services:
     image: afeefrazick/cache-service
     ports:
       - "5000:5000"
-    network_mode: "host"
     environment:
       - MONGODB_URI=$MONGODB_URI
       - VIDEO_ANALYSIS_SERVICE_URI=$VIDEO_ANALYSIS_SERVICE_URI
@@ -11,6 +10,5 @@ services:
     image: afeefrazick/video-analysis-service
     ports:
       - "8000:8000"
-    network_mode: "host"
     environment:
       - YT_API_KEY=$YT_API_KEY
