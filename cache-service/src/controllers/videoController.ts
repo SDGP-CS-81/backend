@@ -58,14 +58,15 @@ export const updateVideo = async (req: Request, res: Response) => {
 
   if (!video) return res.status(204).json({ message: "Video not found" });
 
-  const response = await Video.updateOne(
-    { _id: req.params.videoid },
-    new Video({
-      ...video,
-      ...req.body,
-    })
-  );
-  res.json(response);
+  // const response = await VideoModel.updateOne(
+  //   { _id: req.params.videoid },
+  //   new VideoModel({
+  //     ...video,
+  //     ...req.body,
+  //   })
+  // );
+  const updatedVideo = await Video.findByIdAndUpdate(req.params.videoid, req.body, { new: true });
+  res.json(updatedVideo);
 };
 
 // returns null if nothing is found and deleted, return the deleted video if found

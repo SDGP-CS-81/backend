@@ -1,33 +1,23 @@
 import request from "supertest";
-import { describe, it, beforeEach,expect,jest } from "@jest/globals";
 import { app } from "../src/app";
-import { VideoModel } from "../src/models/Video";
+import { Video } from "../src/models/Video";
+import { describe, it, beforeEach, expect, jest } from "@jest/globals";
 
+jest.mock("../src/models/Video");
 
-jest.mock("../src/models/Video", () => {
-  return {
-    findById: jest.fn(),
-    create: jest.fn(),
-    updateOne: jest.fn(),
-    findByIdAndDelete: jest.fn(),
-  };
-});
-
-  const videoModel = jest.mocked(VideoModel)
+const mockedVideoModel = Video as jest.Mocked<typeof Video>;
 
 beforeEach(() => {
-  // Clear all instances and calls to constructor and all methods:
-  (VideoModel.findById as jest.Mock).mockClear();
-  (VideoModel.create as jest.Mock).mockClear();
-  (VideoModel.updateOne as jest.Mock).mockClear();
-  (VideoModel.findByIdAndDelete as jest.Mock).mockClear();
+  mockedVideoModel.findById.mockClear();
+  mockedVideoModel.create.mockClear();
+  mockedVideoModel.findByIdAndUpdate.mockClear();
+  mockedVideoModel.findByIdAndDelete.mockClear();
 });
 
 describe("Video Controller", () => {
   it("GET /api/video/:videoid - should return video if exists", async () => {
     const videoID = 'some-existing-video-id';
-    // Mock the findById method to return a video
-      (videoModel.findById).mockResolvedValue({ _id: videoID});
+    mockedVideoModel.findById.mockResolvedValue({ _id: videoID } as any);
 
     const response = await request(app).get(`/api/video/${videoID}`);
     expect(response.status).toBe(200);
@@ -35,24 +25,6 @@ describe("Video Controller", () => {
   });
 
   it("POST /api/video - should create a new video", async () => {
-    // const videoData = {
-    //   _id: 'new-video-id',
-    //   categoryScores: {
-    //     lowGraphics: 0.1,
-    //     lowLight: 0.2,
-    //     nature: 0.3,
-    //     person: 0.4,
-    //     sports: 0.5,
-    //     textHeavy: 0.6,
-    //     news: 0.7,
-    //   },
-    //   frameScores: {},
-    //   keywordScores: {},
-    // };
-    // Mock the create method to return the new video
-
-
-
     const videoData = {
       _id: 'new-video-id',
       categoryScores: {
@@ -67,9 +39,7 @@ describe("Video Controller", () => {
       frameScores: {},
       keywordScores: {},
     };
-    
-
-    videoModel.create.mockResolvedValue(videoData as any);
+    mockedVideoModel.create.mockResolvedValue(videoData as any);
 
     const response = await request(app).post("/api/video").send(videoData);
     expect(response.status).toBe(200);
@@ -89,26 +59,19 @@ describe("Video Controller", () => {
         news: 0.8,
       },
     };
-    // Mock the findById method to return the existing video
-    videoModel.findById.mockResolvedValue({ _id: videoID });
-    // Mock the updateOne method to return that it updated one video
-    
-    // (videoModel.updateOne).mockResolvedValue({ person: 1 });
+    mockedVideoModel.findByIdAndUpdate.mockResolvedValue({ _id: videoID, ...updatedData } as any);
 
     const response = await request(app).put(`/api/video/${videoID}`).send(updatedData);
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ nModified: 1 });
+    expect(response.body).toEqual({ _id: videoID, ...updatedData });
   });
 
   it("DELETE /api/video/:videoid - should delete an existing video", async () => {
     const videoID = 'some-existing-video-id';
-    // Mock the findByIdAndDelete method to return the deleted video
-    (videoModel.findByIdAndDelete ).mockResolvedValue({ _id: videoID });
+    mockedVideoModel.findByIdAndDelete.mockResolvedValue({ _id: videoID } as any);
 
     const response = await request(app).delete(`/api/video/${videoID}`);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ _id: videoID });
   });
 });
-
-
