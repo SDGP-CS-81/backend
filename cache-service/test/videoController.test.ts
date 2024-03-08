@@ -24,7 +24,7 @@ describe("Video Controller", () => {
     expect(response.body).toEqual({ _id: videoID });
   });
 
-  it("POST /api/video - should create a new video", async () => {
+  it("POST /api/video/:videoid - should create a new video", async () => {
     const videoData = {
       _id: 'new-video-id',
       categoryScores: {
@@ -41,7 +41,7 @@ describe("Video Controller", () => {
     };
     mockedVideoModel.create.mockResolvedValue(videoData as any);
 
-    const response = await request(app).post("/api/video").send(videoData);
+    const response = await request(app).post("/api/video/${videoID}").send(videoData);
     expect(response.status).toBe(200);
     expect(response.body).toEqual(videoData);
   });

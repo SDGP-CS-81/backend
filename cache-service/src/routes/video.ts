@@ -10,10 +10,7 @@ export const videoRouter = Router();
 
 videoRouter
   .route("/video/:videoid")
-  .get(getVideo)
+  .get(getVideo, createVideo)
   .put(updateVideo)
-  .delete(deleteVideo);
-
-videoRouter
-  .route("/video")
+  .delete(deleteVideo)
   .post(createVideo);
