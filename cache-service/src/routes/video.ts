@@ -5,11 +5,12 @@ import {
   updateVideo,
   deleteVideo,
 } from "../controllers/videoController";
+
 export const videoRouter = Router();
 
 videoRouter
   .route("/video/:videoid")
   .get(getVideo, createVideo)
-  .post(createVideo)
   .put(updateVideo)
-  .delete(deleteVideo);
+  .delete(deleteVideo)
+  .post(createVideo);
