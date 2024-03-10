@@ -5,7 +5,7 @@ import asyncio
 
 class VideoDownloaderTest(IsolatedAsyncioTestCase):
     def setUp(self):
-        self.video_ids = ["3qLs27KTYAg", "IOzkOXSz9gE"]
+        self.video_ids = ["_V8eKsto3Ug", "9uhig4A9gf4", "WXV-zB3EfNw"]
 
     async def test_text_data_no_exception(self):
         """
