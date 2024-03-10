@@ -13,6 +13,10 @@ class VideoAnalyser:
 
     Attributes
     ----------
+    DIFF_SCORE_RANGE: (int, int)
+        the expected range of scores for image diffing
+    DETAIL_SCORE_RANGE: (int, int)
+        the expected range of scores for image detail
     video_frames: [PIL.Image.Image]
         a list of frames that are being analysed
     frame_edge_maps: [(cv2.MatLike, int)]
@@ -39,6 +43,9 @@ class VideoAnalyser:
     calculate_frame_scores() -> (int, int, PIL.Image.Image)
         returns the detail score, diff score and the selected image as a tuple
     """
+
+    DIFF_SCORE_RANGE = (0, 2_000_000)
+    DETAIL_SCORE_RANGE = (0, 2_000)
 
     def __init__(self, video_frames):
         """
@@ -170,7 +177,23 @@ class VideoAnalyser:
         self.video_diff_score = selected_data[1][1]
         self.selected_frame = selected_data[2]
 
+        # Normalize frame scores
+        self.video_diff_score = self._normalize_value_in_range(
+            self.video_diff_score, self.DIFF_SCORE_RANGE
+        )
+
+        self.video_detail_score = self._normalize_value_in_range(
+            self.video_detail_score, self.DETAIL_SCORE_RANGE
+        )
+
         return (self.video_detail_score, self.video_diff_score, self.selected_frame)
+
+    @staticmethod
+    def _normalize_value_in_range(value, value_range):
+        clamped_value = min(value_range[1], value)
+        clamped_value = max(value_range[0], clamped_value)
+
+        return (clamped_value - value_range[0]) / value_range[1] - value_range[0]
 
     def _generate_edge_maps(self):
         # Skip if we already have generated edge_maps
