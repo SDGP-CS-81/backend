@@ -10,7 +10,10 @@ class VideoAnalyserTest(IsolatedAsyncioTestCase):
     def setUpClass(cls):
         video_id = "3qLs27KTYAg"
         vid_dl = VideoDownloader(video_id)
-        cls.video_frames = asyncio.run(vid_dl.get_video_frames())
+        cls.video_frames = asyncio.get_event_loop().run_until_complete(
+            vid_dl.get_video_frames()
+        )
+        asyncio.get_event_loop().run_until_complete(vid_dl.close_http_connections())
         # Mock category keywords dictionary
         cls.keywords = {
             "music": ["music", "song", "orchestra", "rap", "rock", "classical", "pop"],
@@ -75,7 +78,7 @@ class VideoAnalyserTest(IsolatedAsyncioTestCase):
         """
         vid_anl = VideoAnalyser(self.video_frames)
         # Generate the filtered frame data
-        
+
         await vid_anl.calculate_frame_scores()
 
         # Check internal structures to make sure frame duplication has not occured

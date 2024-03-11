@@ -13,8 +13,6 @@ class VideoDownloader:
 
     Attributes
     ----------
-    HTTP_CLIENT : httpx.AsyncClient
-        a client object for making async requests
     HTTP_TIMEOUT : int
         a network timeout that is used when getting frames,
         keep this at a reasonable level to allow for slow sources
@@ -36,6 +34,8 @@ class VideoDownloader:
         a list of frames for a given video
     is_live : boolean
         indicates if the current video is detected as an ongoing livestream
+    http_client : httpx.AsyncClient
+        a client object for making async requests
 
     Methods
     -------
@@ -48,7 +48,6 @@ class VideoDownloader:
 
     # It's better to close this when the server exits or crashes
     HTTP_TIMEOUT = 20
-    HTTP_CLIENT = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
     FRAME_LIMIT = 50
     DEFAULT_FRAME_SIZE = (1280, 720)
 
@@ -66,6 +65,7 @@ class VideoDownloader:
         self.video_storyboard_info = None
         self.video_frames = None
         self.is_live = False
+        self.http_client = httpx.AsyncClient(timeout=self.HTTP_TIMEOUT)
 
     async def get_video_text_info(self):
         """
@@ -131,6 +131,9 @@ class VideoDownloader:
             frames = await self._get_storyboard_frames()
 
         return frames
+
+    async def close_http_connections(self):
+        await self.http_client.aclose()
 
     async def _get_thumbnail_frames(self):
         if self.video_info is None:
@@ -234,10 +237,9 @@ class VideoDownloader:
             key=lambda x: x["format_id"],
         )[0]
 
-    @staticmethod
-    async def _get_image_from_url(url):
+    async def _get_image_from_url(self, url):
         # We have to use BytesIO cause PIL refuses to create an image otherwise
-        return Image.open(BytesIO((await VideoDownloader.HTTP_CLIENT.get(url)).content))
+        return Image.open(BytesIO((await self.http_client.get(url)).content))
 
     @staticmethod
     def _extract_frames(storyboard, cols, rows, width, height):

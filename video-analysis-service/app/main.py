@@ -49,6 +49,7 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
         return response_data
 
     video_frames = await vid_dl.get_video_frames()
+    connection_closing_coroutine = vid_dl.close_http_connections()
     vid_analyser = VideoAnalyser(video_frames)
     (
         detail_score,
@@ -66,4 +67,5 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
         "diffScore": diff_score,
     }
 
+    await connection_closing_coroutine
     return response_data
