@@ -11,6 +11,6 @@ export const videoRouter = Router();
 videoRouter
   .route("/video/:videoid")
   .get(getVideo, createVideo)
+  .post(createVideo)
   .put(updateVideo)
-  .delete(deleteVideo)
-  .post(createVideo);
+  .delete(deleteVideo);

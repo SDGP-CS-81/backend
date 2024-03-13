@@ -10,60 +10,80 @@ export const getVideo = async (
   res: Response,
   next: NextFunction
 ) => {
-  const videoID = req.params.videoid;
-  const video = await Video.findById(videoID);
+  try {
+    const videoID = req.params.videoid;
+    const video = await Video.findById(videoID);
 
-  if (video) return res.json(video);
+    if (video) return res.json(video);
 
-  // get video info from model and analysis
-  const params: { [key: string]: string } = { video_id: videoID };
+    // get video info from model and analysis
+    const params: { [key: string]: string } = { video_id: videoID };
 
-  // add category keywords if they exist
-  if (req.query.categoryKeywords) {
-    params["category_keywords"] = req.query.categoryKeywords.toString();
+    // add category keywords if they exist
+    if (req.query.categoryKeywords) {
+      params["category_keywords"] = req.query.categoryKeywords.toString();
+    }
+
+    const videoScores: VideoScores = (
+      await axios.get(
+        `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
+        { params }
+      )
+    ).data;
+
+    res.locals.videoID = videoID;
+    res.locals.imageScores = videoScores.imageScores;
+    res.locals.frameScores = videoScores.frameScores;
+    res.locals.textScores = videoScores.textScores;
+    next();
+  } catch (e) {
+    res.status(500).json({ error: "Unable to analyse video" });
   }
-
-  const videoScores: VideoScores = (
-    await axios.get(
-      `${process.env.VIDEO_ANALYSIS_SERVICE_URI as string}/video-analysis`,
-      { params }
-    )
-  ).data;
-
-  res.locals.videoID = videoID;
-  res.locals.imageScores = videoScores.imageScores;
-  res.locals.frameScores = videoScores.frameScores;
-  res.locals.textScores = videoScores.textScores;
-  next();
 };
 
 export const createVideo = async (req: Request, res: Response) => {
-  let data = req.body;
+  try {
+    let data = req.body;
 
-  if (res.locals.videoID)
-    data = {
-      _id: res.locals.videoID,
-      imageScores: res.locals.imageScores,
-      frameScores: res.locals.frameScores,
-      textScores: res.locals.textScores,
-    };
+    if (res.locals.videoID)
+      data = {
+        _id: res.locals.videoID,
+        imageScores: res.locals.imageScores,
+        frameScores: res.locals.frameScores,
+        textScores: res.locals.textScores,
+      };
 
-  const newVideo = await Video.create(data);
+    const newVideo = await Video.create(data);
 
-  res.json(newVideo);
+    res.json(newVideo);
+  } catch (err) {
+    res.status(500).json({ error: "Unable to create video" });
+  }
 };
 
 export const updateVideo = async (req: Request, res: Response) => {
-  const video = await Video.findById(req.params.videoid);
+  try {
+    const video = await Video.findById(req.params.videoid);
 
-  if (!video) return res.status(204).json({ message: "Video not found" });
+    if (!video) return res.status(204).json({ message: "Video not found" });
 
-  const updatedVideo = await Video.findByIdAndUpdate(req.params.videoid, req.body, { new: true });
-  res.json(updatedVideo);
+    const updatedVideo = await Video.findByIdAndUpdate(
+      req.params.videoid,
+      req.body,
+      { new: true }
+    );
+    res.json(updatedVideo);
+  } catch (err) {
+    res.status(500).json({ error: "Unable to update video" });
+  }
 };
 
 // returns null if nothing is found and deleted, return the deleted video if found
 export const deleteVideo = async (req: Request, res: Response) => {
-  const video = await Video.findByIdAndDelete(req.params.videoid);
-  res.json(video);
+  try {
+    const video = await Video.findByIdAndDelete(req.params.videoid);
+    res.json(video);
+  } catch (err) {
+    res.status(500).json({ error: "Unable to delete video" });
+  }
 };
