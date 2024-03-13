@@ -7,19 +7,26 @@ import { channelRouter } from "./routes/channel";
 
 export const app: Application = express();
 
+const secondsLimiter = rateLimit({
+  windowMs: 1 * 1000, // 1 second time window
+  max: 10,
+  message: "Too many requests thrown per second, please try again later.",
+});
+
+const minuteLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute time window
+  max: 100, // maximum 100 requests per window
+  message: "Too many requests thrown per minute, please try again later.",
+});
+
 // middleware
+app.use(secondsLimiter, minuteLimiter);
 app.use(express.json());
 app.use(cors());
 
-const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minute
-  max: 300, //maximum 300 requests per 5 minutes
-  message: "Too many requests, please try again later.",
-});
-
 // Apply the rate limiter to the routes
-app.use("/api", limiter, videoRouter);
-app.use("/api", limiter, channelRouter);
+app.use("/api", videoRouter);
+app.use("/api", channelRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(404).send("Prefix API routes with '/api'");
