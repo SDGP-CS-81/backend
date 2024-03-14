@@ -20,7 +20,7 @@ const minuteLimiter = rateLimit({
 });
 
 // middleware
-app.use(secondsLimiter, minuteLimiter);
+// app.use(secondsLimiter, minuteLimiter); // removed for now, conflict with proxy
 app.use(express.json());
 app.use(cors());
 
