@@ -1,10 +1,55 @@
 import { Request, Response } from "express";
-import { CategoriesDocument, Channel } from "../models/Channel";
+import { CategoriesDocument, ChannelDocument, Channel } from "../models/Channel";
+
+
+export const getHighestVoteForChannel = async (req: Request, res: Response) => {
+  try {
+    const channelId: string = req.params.channelId;
+    console.log(channelId)
+
+    // find channel using channel id
+    const channel: ChannelDocument | null = await Channel.findById(channelId);
+
+    let mostVotedCategory: string | null = null;
+
+    // if channel not found, return null
+    if (!channel) {
+      return res.json({ mostVotedCategory });
+    }
+
+    console.log('Categories and votes for channel:', channel._id);
+    console.log(channel.categories);
+
+    // check if categories for channel is not null before accessing
+    if (!channel.categories) {
+      return res.status(500).json({ message: 'Categories not found for the channel' });
+    }
+
+    const { categories } = channel;
+    
+    // find the most voted category
+    let maxVotes: number = 0;
+    for (const [category, votes] of Object.entries(categories)) {
+      if (votes > maxVotes) {
+        mostVotedCategory = category;
+        maxVotes = votes;
+    }
+  }
+
+    // Return the most voted category
+    res.json({ mostVotedCategory });
+
+  } catch (error) {
+    console.error('Error while fetching channel:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
 
 type IncrementVoteCountBody = {
   channelId: string;
   category: keyof CategoriesDocument;
 };
+
 
 export const incrementVoteCount = async (req: Request, res: Response) => {
   const { channelId, category }: IncrementVoteCountBody = req.body;
