@@ -29,12 +29,24 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
     
     // find the most voted category
     let maxVotes: number = 0;
+     // flag to track if there are multiple categories with the same votes
+    let multipleCategoriesWithSameVotes: boolean = false;
     for (const [category, votes] of Object.entries(categories)) {
       if (votes > maxVotes) {
         mostVotedCategory = category;
         maxVotes = votes;
+        // reset the flag if there is a category with more votes
+        multipleCategoriesWithSameVotes = false;
+      } else if (votes === maxVotes) {
+        // set the flag if there is a category with the same votes as the current maxVotes
+        multipleCategoriesWithSameVotes = true;
+      }
     }
-  }
+
+    // if there are multiple categories with the same non-zero votes, set most voted category to null
+    if (multipleCategoriesWithSameVotes && maxVotes !== 0) {
+      mostVotedCategory = null;
+    }
 
     // Return the most voted category
     res.json({ mostVotedCategory });
