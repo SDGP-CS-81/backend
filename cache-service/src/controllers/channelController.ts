@@ -26,7 +26,15 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
     }
 
     const { categories } = channel;
-    
+
+    // check if all category votes are zero
+    const allZeroVotes: boolean = Object.values(categories).every(votes => votes === 0);
+
+    // if all category votes are zero, return null
+    if (allZeroVotes) {
+      return res.json({ mostVotedCategory: null });
+    }
+
     // find the most voted category
     let maxVotes: number = 0;
      // flag to track if there are multiple categories with the same votes
