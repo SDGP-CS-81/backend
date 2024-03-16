@@ -1,6 +1,8 @@
 import numpy as np
 import tflite_runtime.interpreter as tflite
+from app.logger import setup_logger
 
+logger = setup_logger(__name__, log_level="DEBUG", log_file="video-analysis-service.log")
 
 class ImageClassifier:
     MODEL_PATH = "model/model.tflite"
@@ -25,10 +27,12 @@ class ImageClassifier:
         return cls._instance
 
     def __init__(self):
+        logger.debug("Initializing ImageClassifier.")
         # check if interpreter instantiated in instance, if not set interpreter and details
         try:
             self._interpreter
         except AttributeError:
+            logger.debug("Loading TFLite model.")
             # load model through interpreter api
             self._interpreter = tflite.Interpreter(
                 model_path=ImageClassifier.MODEL_PATH
@@ -38,8 +42,10 @@ class ImageClassifier:
             # retieve details of input and output tensors to shape input image acccordingly
             self._input_details = self._interpreter.get_input_details()[0]
             self._output_details = self._interpreter.get_output_details()[0]
+            logger.info("model loaded successfully.")
 
     def classify_frame(self, frame):
+        logger.debug("Classifying frame.")
         resized_frame = frame.resize(ImageClassifier.IMAGE_DIMENSION)
         numpy_image = np.array(resized_frame).reshape(
             (ImageClassifier.IMAGE_DIMENSION + (3,))
@@ -53,9 +59,11 @@ class ImageClassifier:
         self._interpreter.invoke()
         prediction = self._interpreter.get_tensor(self._output_details["index"])[0]
 
+        logger.debug("generating image scores.")
         image_scores = {
             class_name: float(score)
             for class_name, score in zip(ImageClassifier.CLASS_NAMES, prediction)
         }
 
+        logger.info(f"Image scores: {image_scores}")
         return image_scores

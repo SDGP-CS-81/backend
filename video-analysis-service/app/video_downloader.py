@@ -3,7 +3,9 @@ from PIL import Image
 from io import BytesIO
 import asyncio
 import httpx
+from app.logger import setup_logger
 
+logger = setup_logger(__name__, log_level="DEBUG", log_file="video-analysis-service.log")
 
 class VideoDownloader:
     """
@@ -58,7 +60,7 @@ class VideoDownloader:
         video_id : str
             a valid YouTube video id
         """
-
+        logger.info(f"Initializing VideoDownloader for video ID: {video_id}")
         self.yt = YoutubeDL()
         self.video_id = video_id
         self.video_info = None
@@ -85,10 +87,11 @@ class VideoDownloader:
         ------
         VideoDownloaderError
         """
-
+        logger.info("Retrieving video text information")
         await self._initialize_video_info()
 
         if self.video_info is None:
+            logger.error("Failed to retrieve video information")
             raise VideoDownloaderError
 
         video_categories = self.video_info["categories"]
@@ -117,8 +120,10 @@ class VideoDownloader:
         ------
         VideoDownloaderError
         """
+        logger.info("Retrieving video frames")
 
         if self.video_frames is not None:
+            logger.debug("Returning cached video frames")
             return self.video_frames
 
         # Ensure the required fields are populated
@@ -126,17 +131,21 @@ class VideoDownloader:
 
         # If the video is live we fallback to using thumbnails as our frames
         if self.is_live:
+            logger.debug("Video is live, retrieving thumbnail frames")
             frames = await self._get_thumbnail_frames()
         else:
+            logger.debug("Retrieving storyboard frames")
             frames = await self._get_storyboard_frames()
 
         return frames
 
     async def close_http_connections(self):
+        logger.debug("Closing HTTP connections")
         await self.http_client.aclose()
 
     async def _get_thumbnail_frames(self):
         if self.video_info is None:
+            logger.error("Failed to retrieve video information")
             raise VideoDownloaderError
 
         thumbnail_urls = (
@@ -148,6 +157,7 @@ class VideoDownloader:
             if thumb_info["preference"] > -10
         )
 
+        logger.debug("Downloading thumbnail frames")
         # Asynchronously get all the thumbnails
         frames = (
             result  # Get the other images even if one fails
@@ -160,10 +170,13 @@ class VideoDownloader:
 
         # Thumbnails could come in different resolutions
         # Resize them so that they are all consistent
-        return [frame.resize(self.DEFAULT_FRAME_SIZE) for frame in frames]
+        resized_frames = [frame.resize(self.DEFAULT_FRAME_SIZE) for frame in frames]
+        logger.info(f"Retrieved {len(resized_frames)} thumbnail frames")
+        return resized_frames
 
     async def _get_storyboard_frames(self):
         if self.video_storyboard_info is None:
+            logger.error("Failed to retrieve video storyboard information")
             raise VideoDownloaderError
 
         sb_rows = self.video_storyboard_info["rows"]
@@ -172,6 +185,7 @@ class VideoDownloader:
         # Approximately limit the amount of frames downloaded to FRAME_LIMIT
         fragment_step_size = (sb_rows * sb_cols * num_fragments) // self.FRAME_LIMIT
 
+        logger.debug("Downloading storyboard fragments")
         # Get all storyboard images asynchronously
         storyboard_fragments = (
             result  # Get the other images even if one fails
@@ -190,6 +204,7 @@ class VideoDownloader:
         sb_width = self.video_storyboard_info["width"]
         sb_height = self.video_storyboard_info["height"]
 
+        logger.debug("Extracting frames from storyboard fragments")
         # Extract all the frames from the storyboards asynchronously
         storyboard_frames = await asyncio.gather(
             *(
@@ -202,13 +217,16 @@ class VideoDownloader:
 
         # Flatten the resulting [[Image, ...], ...] array into a [Image, ...] array
         self.video_frames = [frame for frames in storyboard_frames for frame in frames]
+        logger.info(f"Retrieved {len(self.video_frames)} storyboard frames")
         return self.video_frames
 
     async def _initialize_video_info(self):
         # Skip if the object has already been initialized
         if self.video_info and (self.video_storyboard_info or self.is_live):
+            logger.debug("Video information already initialized, skipping initialization")
             return
 
+        logger.debug("Initializing video information")
         # Asynchronously get the video info with yt_dlp
         # We have to do it another thread because yt_dlp doesn't have
         # async methods for these operations
@@ -218,13 +236,16 @@ class VideoDownloader:
 
         # Check that we actually managed to download the info
         if self.video_info is None:
+            logger.error("Failed to retrieve video information")
             raise VideoDownloaderError
 
         # Don't attempt to get storyboard info if it's a live video
         if self.video_info["is_live"]:
+            logger.info("Video is a live stream")
             self.is_live = True
             return
 
+        logger.debug("Retrieving video storyboard information")
         # Get only the storyboard streams and sort them by the highest quality
         # storyboard, which is usually sb0
         self.video_storyboard_info = sorted(
@@ -238,6 +259,7 @@ class VideoDownloader:
         )[0]
 
     async def _get_image_from_url(self, url):
+        logger.debug(f"Downloading image from URL: {url}")
         # We have to use BytesIO cause PIL refuses to create an image otherwise
         return Image.open(BytesIO((await self.http_client.get(url)).content))
 

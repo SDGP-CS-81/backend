@@ -3,7 +3,9 @@ import statistics
 import asyncio
 import numpy
 import re
+from app.logger import setup_logger
 
+logger = setup_logger(__name__, log_level="DEBUG", log_file="video-analysis-service.log")
 
 class VideoAnalyser:
     """
@@ -54,7 +56,7 @@ class VideoAnalyser:
         video_frames : [PIL.Image.Image]
             a list of frames to be analysed
         """
-
+        logger.info(f"Initializing VideoAnalyser with {len(video_frames)} frames.")
         self.video_frames = video_frames
         self.frame_edge_maps = []
         self.frame_diff_maps = []
@@ -64,6 +66,7 @@ class VideoAnalyser:
         self.selected_frame = None
 
     async def calculate_frame_scores(self):
+        logger.debug('Calculating frame scores...')
         """
         Analyses the given frames and returns the detail and diff scores,
         as well as the selected frames
@@ -76,7 +79,7 @@ class VideoAnalyser:
         -------
         (int, int, PIL.Image.Image)
         """
-
+        logger.info(f"Calculated frame scores: detail_score={self.video_detail_score}, diff_score={self.video_diff_score}")
         result = await asyncio.to_thread(self._calculate_frame_scores)
         # Uncomment the below line to dump the analysed data onto disk
         # await asyncio.to_thread(self._save_to_disk)
@@ -101,7 +104,7 @@ class VideoAnalyser:
         {str: int}
             a map of categories to their keyword occurence scores
         """
-
+        logger.info("Calculating text scores.")
         return {
             key: len(  # Use the number of non-zero keyword hits as the score
                 [
@@ -128,9 +131,11 @@ class VideoAnalyser:
 
     def _save_to_disk(self):
         if self.selected_frame:
+            logger.debug("Saving selected frame to disk.")
             self.selected_frame.save("selected_frame.webp")
 
         for f_idx in range(len(self.filtered_frame_data)):
+            logger.debug(f"Saving frame {f_idx} to disk.")
             self.filtered_frame_data[f_idx][2].save(f"outputs/{f_idx}.webp")
             cv2.imwrite(
                 f"outputs/{f_idx}_edgemap.webp", self.filtered_frame_data[f_idx][0][0]
@@ -140,8 +145,10 @@ class VideoAnalyser:
             )
 
     def _calculate_frame_scores(self):
+        logger.debug("Calculating frame scores...")
         # Return cached values if available
         if self.video_detail_score and self.video_diff_score and self.selected_frame:
+            logger.info(f"Calculated frame scores: detail_score={self.video_detail_score}, diff_score={self.video_diff_score}")
             return (self.video_detail_score, self.video_diff_score, self.selected_frame)
 
         # These must be called in this order prior to doing anything else
@@ -186,6 +193,9 @@ class VideoAnalyser:
             self.video_detail_score, self.DETAIL_SCORE_RANGE
         )
 
+        logger.debug(
+            f"Calculated frame scores: detail_score={self.video_detail_score}, diff_score={self.video_diff_score}"
+        )
         return (self.video_detail_score, self.video_diff_score, self.selected_frame)
 
     @staticmethod
@@ -196,10 +206,13 @@ class VideoAnalyser:
         return (clamped_value - value_range[0]) / value_range[1] - value_range[0]
 
     def _generate_edge_maps(self):
+        logger.debug("Generating edge maps...")
         # Skip if we already have generated edge_maps
         if len(self.frame_edge_maps) > 0:
+            logger.info(f"Generated {len(self.frame_edge_maps)} edge maps.")
             return
 
+        logger.debug("Generating edge maps.")
         self.frame_edge_maps = sorted(
             (
                 (edge_map, edge_map.var())
@@ -232,13 +245,16 @@ class VideoAnalyser:
         ]
 
     def _generate_diff_maps(self):
+        logger.debug("Generating diff maps...")
         # We need the edge maps to be already generated
         # before we can do the diff maps
         if len(self.frame_edge_maps) <= 0:
+            logger.error("Edge maps not generated. Cannot generate diff maps.")
             raise VideoAnalyserError
 
         # Skip generation if we already have the maps cached
         if len(self.frame_diff_maps) > 0:
+            logger.debug("Diff maps already generated, skipping generation.")
             return
 
         # Use the highest detail edge map
@@ -254,6 +270,8 @@ class VideoAnalyser:
                 for edge_map in self.frame_edge_maps
             )
         ]
+        logger.info(f"Generated {len(self.frame_diff_maps)} diff maps.")
+
 
 
 class VideoAnalyserError(Exception):
