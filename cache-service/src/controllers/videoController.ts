@@ -60,30 +60,3 @@ export const createVideo = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Unable to create video" });
   }
 };
-
-export const updateVideo = async (req: Request, res: Response) => {
-  try {
-    const video = await Video.findById(req.params.videoid);
-
-    if (!video) return res.status(204).json({ message: "Video not found" });
-
-    const updatedVideo = await Video.findByIdAndUpdate(
-      req.params.videoid,
-      req.body,
-      { new: true }
-    );
-    res.json(updatedVideo);
-  } catch (err) {
-    res.status(500).json({ error: "Unable to update video" });
-  }
-};
-
-// returns null if nothing is found and deleted, return the deleted video if found
-export const deleteVideo = async (req: Request, res: Response) => {
-  try {
-    const video = await Video.findByIdAndDelete(req.params.videoid);
-    res.json(video);
-  } catch (err) {
-    res.status(500).json({ error: "Unable to delete video" });
-  }
-};
