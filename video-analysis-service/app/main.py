@@ -7,7 +7,9 @@ from app.image_classifier import ImageClassifier
 import asyncio
 from app.logger import setup_logger
 
-logger = setup_logger(__name__, log_level="DEBUG", log_file="video-analysis-service.log")
+logger = setup_logger(
+    __name__, log_level="DEBUG", log_file="video-analysis-service.log"
+)
 
 app = FastAPI()
 # Restrict this when we deploy
@@ -28,7 +30,9 @@ def root_route():
 
 @app.get("/video-analysis")
 async def video_analysis_route(video_id: str, category_keywords: Json | None = None):
-    logger.info(f"Received request for video analysis: {video_id}")
+    logger.info(
+        f"Received request for video analysis: video_id: {video_id}, category_keywords: {category_keywords}"
+    )
     vid_dl = VideoDownloader(video_id)
     video_category, video_text_data = await vid_dl.get_video_text_info()
 
@@ -48,11 +52,11 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
     # This should be synchronized with the frontend
     if "music" in video_category[0].lower():
         text_scores["music"] = 1000
-        logger.debug('Video category is music. Returning response data early.')
+        logger.debug("Video category is music. Returning response data early.")
         return response_data
     elif "gaming" in video_category[0].lower():
         text_scores["gaming"] = 1000
-        logger.debug('Video category is gaming. Returning response data early.')
+        logger.debug("Video category is gaming. Returning response data early.")
         return response_data
 
     video_frames = await vid_dl.get_video_frames()
@@ -75,5 +79,5 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
     }
 
     await connection_closing_coroutine
-    logger.info('Video analysis completed. Returning response data.')
+    logger.info("Video analysis completed. Returning response data.")
     return response_data

@@ -2,7 +2,10 @@ import numpy as np
 import tflite_runtime.interpreter as tflite
 from app.logger import setup_logger
 
-logger = setup_logger(__name__, log_level="DEBUG", log_file="video-analysis-service.log")
+logger = setup_logger(
+    __name__, log_level="DEBUG", log_file="video-analysis-service.log"
+)
+
 
 class ImageClassifier:
     MODEL_PATH = "model/model.tflite"
@@ -42,7 +45,7 @@ class ImageClassifier:
             # retieve details of input and output tensors to shape input image acccordingly
             self._input_details = self._interpreter.get_input_details()[0]
             self._output_details = self._interpreter.get_output_details()[0]
-            logger.info("model loaded successfully.")
+            logger.info("Model loaded successfully.")
 
     def classify_frame(self, frame):
         logger.debug("Classifying frame.")
@@ -59,7 +62,7 @@ class ImageClassifier:
         self._interpreter.invoke()
         prediction = self._interpreter.get_tensor(self._output_details["index"])[0]
 
-        logger.debug("generating image scores.")
+        logger.debug("Generating image scores.")
         image_scores = {
             class_name: float(score)
             for class_name, score in zip(ImageClassifier.CLASS_NAMES, prediction)
