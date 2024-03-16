@@ -19,8 +19,12 @@ const minuteLimiter = rateLimit({
   message: "Too many requests thrown per minute, please try again later.",
 });
 
+// trust the proxy in the deployment
+// the number is the amount of proxies we are behind
+app.set("trust proxy", 1);
+
 // middleware
-// app.use(secondsLimiter, minuteLimiter); // removed for now, conflict with proxy
+app.use(secondsLimiter, minuteLimiter);
 app.use(express.json());
 app.use(cors());
 
