@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Video, VideoDocument } from "../models/Video";
 import axios from "axios";
+import Logger from '../logger';
 
 type VideoScores = Omit<VideoDocument, "_id">;
 
@@ -36,7 +37,8 @@ export const getVideo = async (
     res.locals.frameScores = videoScores.frameScores;
     res.locals.textScores = videoScores.textScores;
     next();
-  } catch (e) {
+  } catch (e: any ) {
+    Logger.error(`Unable to analyse video: ${e.message}`);
     res.status(500).json({ error: "Unable to analyse video" });
   }
 };
@@ -56,7 +58,8 @@ export const createVideo = async (req: Request, res: Response) => {
     const newVideo = await Video.create(data);
 
     res.json(newVideo);
-  } catch (err) {
+  } catch (err: any) {
+    Logger.error(`Unable to create video: ${err.message}`);
     res.status(500).json({ error: "Unable to create video" });
   }
 };
