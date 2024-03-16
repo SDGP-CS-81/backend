@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
-import { CategoriesDocument, ChannelDocument, Channel } from "../models/Channel";
-
+import {
+  CategoriesDocument,
+  ChannelDocument,
+  Channel,
+} from "../models/Channel";
 
 export const getHighestVoteForChannel = async (req: Request, res: Response) => {
   try {
     const channelId: string = req.params.channelId;
-    console.log(channelId)
 
     // find channel using channel id
     const channel: ChannelDocument | null = await Channel.findById(channelId);
@@ -17,18 +19,19 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
       return res.json({ mostVotedCategory });
     }
 
-    console.log('Categories and votes for channel:', channel._id);
-    console.log(channel.categories);
-
     // check if categories for channel is not null before accessing
     if (!channel.categories) {
-      return res.status(500).json({ message: 'Categories not found for the channel' });
+      return res
+        .status(500)
+        .json({ message: "Categories not found for the channel" });
     }
 
     const { categories } = channel;
 
     // check if all category votes are zero
-    const allZeroVotes: boolean = Object.values(categories).every(votes => votes === 0);
+    const allZeroVotes: boolean = Object.values(categories).every(
+      (votes) => votes === 0,
+    );
 
     // if all category votes are zero, return null
     if (allZeroVotes) {
@@ -37,7 +40,7 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
 
     // find the most voted category
     let maxVotes: number = 0;
-     // flag to track if there are multiple categories with the same votes
+    // flag to track if there are multiple categories with the same votes
     let multipleCategoriesWithSameVotes: boolean = false;
     for (const [category, votes] of Object.entries(categories)) {
       if (votes > maxVotes) {
@@ -58,18 +61,15 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
 
     // Return the most voted category
     res.json({ mostVotedCategory });
-
   } catch (error) {
-    console.error('Error while fetching channel:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 type IncrementVoteCountBody = {
   channelId: string;
   category: keyof CategoriesDocument;
 };
-
 
 export const incrementVoteCount = async (req: Request, res: Response) => {
   const { channelId, category }: IncrementVoteCountBody = req.body;
@@ -92,10 +92,6 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
     // increment the vote count for the specified category
     channel.categories[category]++;
 
-    console.log(
-      `Vote count for category ${category} in channel ${channelId}: ${channel.categories[category]}`
-    );
-
     // save the updated channel document
     await channel.save();
 
@@ -103,7 +99,6 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: "Vote count incremented successfully" });
   } catch (error) {
-    console.error("Error incrementing vote count:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
