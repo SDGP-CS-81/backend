@@ -16,7 +16,6 @@ CONSOLE_FORMATTER = logging.Formatter("%(levelname)s - %(name)s - %(message)s")
 
 
 def setup_logger(name, log_level="INFO", log_file=None):
-    
     logger = logging.getLogger(name)
     logger.setLevel(LOG_LEVELS.get(log_level.upper(), logging.INFO))
 
