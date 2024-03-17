@@ -8,6 +8,8 @@ export const loggerMiddleware = (req: Request, res: Response, next: NextFunction
   
     res.on('finish', () => {
       const elapsed = process.hrtime(start);
+      // process.hrtime(start) returns an array [seconds, nanoseconds]
+      // Convert seconds to milliseconds and add nanoseconds converted to milliseconds
       const elapsedTimeMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
       Logger.info(`${req.method} ${req.originalUrl} [RESPONSE] ${res.statusCode} ${elapsedTimeMs.toFixed(3)} ms, IP: ${req.ip}, X-Forwarded-For: ${req.headers['x-forwarded-for'] || 'N/A'}`);
     });

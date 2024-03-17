@@ -26,10 +26,10 @@ const minuteLimiter = rateLimit({
 app.set("trust proxy", 1);
 
 // middleware
+app.use(loggerMiddleware);
 app.use(secondsLimiter, minuteLimiter);
 app.use(express.json());
 app.use(cors());
-app.use(loggerMiddleware);
 
 
 // Apply the rate limiter to the routes

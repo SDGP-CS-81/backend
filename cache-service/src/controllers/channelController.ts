@@ -5,7 +5,7 @@ import Logger from '../logger';
 export const getHighestVoteForChannel = async (req: Request, res: Response) => {
   try {
     const channelId: string = req.params.channelId;
-    Logger.info(`Received request to get highest vote for channel ${channelId} from IP: ${req.ip}, X-Forwarded-For: ${req.headers['x-forwarded-for'] || 'N/A'}`);
+    Logger.info(`Received request to get highest vote for channel ${channelId}`);
 
     // find channel using channel id
     const channel: ChannelDocument | null = await Channel.findById(channelId);
@@ -81,7 +81,7 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
   }
 
   try {
-    Logger.info(`Received request to increment vote count for channel ${channelId} and category ${category} from IP: ${req.ip}, X-Forwarded-For: ${req.headers['x-forwarded-for'] || 'N/A'}`);
+    Logger.info(`Received request to increment vote count for channel ${channelId} and category ${category}`);
     let channel = await Channel.findById(channelId);
 
     if (!channel) {
