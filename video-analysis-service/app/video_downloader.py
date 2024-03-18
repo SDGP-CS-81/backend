@@ -51,7 +51,6 @@ class VideoDownloader:
         or the thumbnails for the video
     """
 
-    # It's better to close this when the server exits or crashes
     HTTP_TIMEOUT = 20
     FRAME_LIMIT = 50
     DEFAULT_FRAME_SIZE = (1280, 720)
@@ -63,13 +62,16 @@ class VideoDownloader:
         video_id : str
             a valid YouTube video id
         """
+
         logger.info(f"Initializing VideoDownloader for video ID: {video_id}")
+
         self.yt = YoutubeDL()
         self.video_id = video_id
         self.video_info = None
         self.video_storyboard_info = None
         self.video_frames = None
         self.is_live = False
+        # It's better to close this when the server exits or crashes
         self.http_client = httpx.AsyncClient(timeout=self.HTTP_TIMEOUT)
 
     async def get_video_text_info(self):

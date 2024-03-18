@@ -11,6 +11,10 @@ logger = setup_logger(
     __name__, log_level="DEBUG", log_file="video-analysis-service.log"
 )
 
+# These are merged with the client keywords
+# These must always use a list for the keywords
+STATIC_KEYWORDS = {"music": [], "coding": ["Programming", "Coding"]}
+
 app = FastAPI()
 # Restrict this when we deploy
 app.add_middleware(
@@ -36,10 +40,19 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
     vid_dl = VideoDownloader(video_id)
     video_category, video_text_data = await vid_dl.get_video_text_info()
 
-    text_scores = (
-        VideoAnalyser.calculate_text_scores(video_text_data, category_keywords)
-        if category_keywords is not None
-        else {}
+    # Merge static and client keywords
+    if category_keywords is None:
+        category_keywords = STATIC_KEYWORDS
+    else:
+        category_keywords = {
+            key: value + (STATIC_KEYWORDS[key] if key in STATIC_KEYWORDS.keys() else [])
+            for key, value in category_keywords.items()
+        }
+
+    logger.info(category_keywords)
+
+    text_scores = VideoAnalyser.calculate_text_scores(
+        video_text_data, category_keywords
     )
 
     response_data = {
