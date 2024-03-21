@@ -4,7 +4,6 @@ from pydantic import Json
 from app.video_analyser import VideoAnalyser
 from app.video_downloader import VideoDownloader
 from app.image_classifier import ImageClassifier
-from app.keywords import STATIC_KEYWORDS
 import asyncio
 from app.logger import setup_logger
 
@@ -29,33 +28,38 @@ def root_route():
     return {"error": "Use GET /video-analysis instead"}
 
 
+@app.get("/text-analysis")
+async def text_analysis_route(video_id: str, category_keywords: Json | None = None):
+    logger.info(
+        f"Received request for text analysis: video_id: {video_id}, category_keywords: {category_keywords}"
+    )
+
+    vid_dl = VideoDownloader(video_id)
+    video_category, video_text_data = await vid_dl.get_video_text_info()
+
+    merged_keywords = VideoAnalyser.merge_keywords(category_keywords)
+    text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keywords)
+
+    response_data = {
+        "textScores": text_scores,
+    }
+
+    VideoAnalyser.yt_categorization_check(video_category, text_scores)
+
+    return response_data
+
+
 @app.get("/video-analysis")
 async def video_analysis_route(video_id: str, category_keywords: Json | None = None):
     logger.info(
         f"Received request for video analysis: video_id: {video_id}, category_keywords: {category_keywords}"
     )
+
     vid_dl = VideoDownloader(video_id)
     video_category, video_text_data = await vid_dl.get_video_text_info()
 
-    # Merge static and client keywords
-    if category_keywords is None:
-        merged_keys_dict = STATIC_KEYWORDS
-    else:
-        merged_keys_dict = category_keywords | STATIC_KEYWORDS
-        client_keys = category_keywords.keys()
-        static_keys = STATIC_KEYWORDS.keys()
-
-        for key in merged_keys_dict.keys():
-            if key in client_keys and key in static_keys:
-                merged_keys_dict[key] = category_keywords[key] + STATIC_KEYWORDS[key]
-            elif key in client_keys:
-                merged_keys_dict[key] = category_keywords[key]
-            elif key in static_keys:
-                merged_keys_dict[key] = STATIC_KEYWORDS[key]
-
-    logger.info(merged_keys_dict)
-
-    text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keys_dict)
+    merged_keywords = VideoAnalyser.merge_keywords(category_keywords)
+    text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keywords)
 
     response_data = {
         "imageScores": {key: 0 for key in ImageClassifier.CLASS_NAMES},
@@ -63,15 +67,11 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
         "textScores": text_scores,
     }
 
-    # Hack to use YT category to boost score and exit early
-    # This should be synchronized with the frontend
-    if "music" in video_category[0].lower():
-        text_scores["music"] = 1000
-        logger.debug("Video category is music. Returning response data early.")
-        return response_data
-    elif "gaming" in video_category[0].lower():
-        text_scores["gaming"] = 1000
-        logger.debug("Video category is gaming. Returning response data early.")
+    is_yt_categorized = VideoAnalyser.yt_categorization_check(
+        video_category, text_scores
+    )
+
+    if is_yt_categorized:
         return response_data
 
     video_frames = await vid_dl.get_video_frames()
