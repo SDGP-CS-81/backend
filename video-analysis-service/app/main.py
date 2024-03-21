@@ -4,6 +4,7 @@ from pydantic import Json
 from app.video_analyser import VideoAnalyser
 from app.video_downloader import VideoDownloader
 from app.image_classifier import ImageClassifier
+from app.keywords import STATIC_KEYWORDS
 import asyncio
 from app.logger import setup_logger
 
@@ -36,10 +37,19 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
     vid_dl = VideoDownloader(video_id)
     video_category, video_text_data = await vid_dl.get_video_text_info()
 
-    text_scores = (
-        VideoAnalyser.calculate_text_scores(video_text_data, category_keywords)
-        if category_keywords is not None
-        else {}
+    # Merge static and client keywords
+    if category_keywords is None:
+        category_keywords = STATIC_KEYWORDS
+    else:
+        category_keywords = {
+            key: value + (STATIC_KEYWORDS[key] if key in STATIC_KEYWORDS.keys() else [])
+            for key, value in category_keywords.items()
+        }
+
+    logger.info(category_keywords)
+
+    text_scores = VideoAnalyser.calculate_text_scores(
+        video_text_data, category_keywords
     )
 
     response_data = {
