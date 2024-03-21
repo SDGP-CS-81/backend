@@ -4,16 +4,13 @@ from pydantic import Json
 from app.video_analyser import VideoAnalyser
 from app.video_downloader import VideoDownloader
 from app.image_classifier import ImageClassifier
+from app.keywords import STATIC_KEYWORDS
 import asyncio
 from app.logger import setup_logger
 
 logger = setup_logger(
     __name__, log_level="DEBUG", log_file="video-analysis-service.log"
 )
-
-# These are merged with the client keywords
-# These must always use a list for the keywords
-STATIC_KEYWORDS = {"music": [], "coding": ["Programming", "Coding"]}
 
 app = FastAPI()
 # Restrict this when we deploy
