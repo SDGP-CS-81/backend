@@ -39,18 +39,23 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
 
     # Merge static and client keywords
     if category_keywords is None:
-        category_keywords = STATIC_KEYWORDS
+        merged_keys_dict = STATIC_KEYWORDS
     else:
-        category_keywords = {
-            key: value + (STATIC_KEYWORDS[key] if key in STATIC_KEYWORDS.keys() else [])
-            for key, value in category_keywords.items()
-        }
+        merged_keys_dict = category_keywords | STATIC_KEYWORDS
+        client_keys = category_keywords.keys()
+        static_keys = STATIC_KEYWORDS.keys()
 
-    logger.info(category_keywords)
+        for key in merged_keys_dict.keys():
+            if key in client_keys and key in static_keys:
+                merged_keys_dict[key] = category_keywords[key] + STATIC_KEYWORDS[key]
+            elif key in client_keys:
+                merged_keys_dict[key] = category_keywords[key]
+            elif key in static_keys:
+                merged_keys_dict[key] = STATIC_KEYWORDS[key]
 
-    text_scores = VideoAnalyser.calculate_text_scores(
-        video_text_data, category_keywords
-    )
+    logger.info(merged_keys_dict)
+
+    text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keys_dict)
 
     response_data = {
         "imageScores": {key: 0 for key in ImageClassifier.CLASS_NAMES},
