@@ -5,6 +5,7 @@ import numpy
 import re
 from app.logger import setup_logger
 from app.keywords import STATIC_KEYWORDS
+from app.image_classifier import ImageClassifier
 
 logger = setup_logger(
     __name__, log_level="DEBUG", log_file="video-analysis-service.log"
@@ -131,6 +132,15 @@ class VideoAnalyser:
             )
             for key in keywords.keys()
         }
+
+    @staticmethod
+    def generate_dummy_scores():
+        data = {
+            "imageScores": {key: 0.0 for key in ImageClassifier.CLASS_NAMES},
+            "frameScores": {"detailScore": 0, "diffScore": 0},
+        }
+
+        return data
 
     @staticmethod
     def merge_keywords(category_keywords):

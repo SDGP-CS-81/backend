@@ -40,11 +40,17 @@ async def text_analysis_route(video_id: str, category_keywords: Json | None = No
     merged_keywords = VideoAnalyser.merge_keywords(category_keywords)
     text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keywords)
 
-    response_data = {
-        "textScores": text_scores,
-    }
+    is_yt_categorized = VideoAnalyser.yt_categorization_check(
+        video_category, text_scores
+    )
 
-    VideoAnalyser.yt_categorization_check(video_category, text_scores)
+    response_data = VideoAnalyser.generate_dummy_scores()
+
+    response_data["isYtCategorized"] = is_yt_categorized
+    response_data["textScores"] = text_scores
+
+    logger.info("Text analysis complete, sending data")
+    logger.info(response_data)
 
     return response_data
 
@@ -56,23 +62,8 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
     )
 
     vid_dl = VideoDownloader(video_id)
-    video_category, video_text_data = await vid_dl.get_video_text_info()
 
-    merged_keywords = VideoAnalyser.merge_keywords(category_keywords)
-    text_scores = VideoAnalyser.calculate_text_scores(video_text_data, merged_keywords)
-
-    response_data = {
-        "imageScores": {key: 0 for key in ImageClassifier.CLASS_NAMES},
-        "frameScores": {"detailScore": 0, "diffScore": 0},
-        "textScores": text_scores,
-    }
-
-    is_yt_categorized = VideoAnalyser.yt_categorization_check(
-        video_category, text_scores
-    )
-
-    if is_yt_categorized:
-        return response_data
+    response_data = VideoAnalyser.generate_dummy_scores()
 
     video_frames = await vid_dl.get_video_frames()
     connection_closing_coroutine = vid_dl.close_http_connections()
@@ -95,4 +86,5 @@ async def video_analysis_route(video_id: str, category_keywords: Json | None = N
 
     await connection_closing_coroutine
     logger.info("Video analysis completed. Returning response data.")
+    logger.info(response_data)
     return response_data
