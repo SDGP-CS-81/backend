@@ -4,6 +4,8 @@ import asyncio
 import numpy
 import re
 from app.logger import setup_logger
+from app.keywords import STATIC_KEYWORDS
+from app.image_classifier import ImageClassifier
 
 logger = setup_logger(
     __name__, log_level="DEBUG", log_file="video-analysis-service.log"
@@ -130,6 +132,52 @@ class VideoAnalyser:
             )
             for key in keywords.keys()
         }
+
+    @staticmethod
+    def generate_dummy_scores():
+        data = {
+            "imageScores": {key: 0.0 for key in ImageClassifier.CLASS_NAMES},
+            "frameScores": {"detailScore": 0, "diffScore": 0},
+        }
+
+        return data
+
+    @staticmethod
+    def merge_keywords(category_keywords):
+        # Merge static and client keywords
+        if category_keywords is None:
+            merged_keys_dict = STATIC_KEYWORDS
+        else:
+            merged_keys_dict = category_keywords | STATIC_KEYWORDS
+            client_keys = category_keywords.keys()
+            static_keys = STATIC_KEYWORDS.keys()
+
+            for key in merged_keys_dict.keys():
+                if key in client_keys and key in static_keys:
+                    merged_keys_dict[key] = (
+                        category_keywords[key] + STATIC_KEYWORDS[key]
+                    )
+                elif key in client_keys:
+                    merged_keys_dict[key] = category_keywords[key]
+                elif key in static_keys:
+                    merged_keys_dict[key] = STATIC_KEYWORDS[key]
+
+        return merged_keys_dict
+
+    @staticmethod
+    def yt_categorization_check(video_category, text_scores):
+        # Hack to use YT category to boost score and exit early
+        # This should be synchronized with the frontend
+        if "music" in video_category[0].lower():
+            text_scores["music"] = 1000
+            logger.debug("Video category is music. Returning response data early.")
+            return True
+        elif "gaming" in video_category[0].lower():
+            text_scores["gaming"] = 1000
+            logger.debug("Video category is gaming. Returning response data early.")
+            return True
+
+        return False
 
     def _save_to_disk(self):
         if self.selected_frame:

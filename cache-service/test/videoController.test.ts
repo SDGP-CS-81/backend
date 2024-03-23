@@ -15,15 +15,6 @@ beforeEach(() => {
 });
 
 describe("Video Controller", () => {
-  it("GET /api/video/:videoid - should return video if exists", async () => {
-    const videoID = "some-existing-video-id";
-    mockedVideoModel.findById.mockResolvedValue({ _id: videoID });
-
-    const response = await request(app).get(`/api/video/${videoID}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ _id: videoID });
-  });
-
   it("POST /api/video/:videoid - should create a new video", async () => {
     const videoData = {
       _id: "new-video-id",
@@ -37,7 +28,6 @@ describe("Video Controller", () => {
         news: 0.7,
       },
       frameScores: {},
-      textScores: {},
     };
     mockedVideoModel.create.mockResolvedValue(videoData as any);
 

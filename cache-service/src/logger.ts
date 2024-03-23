@@ -1,7 +1,10 @@
-import winston from 'winston';
-import path from 'path';
+import winston from "winston";
+import path from "path";
+import dotenv from "dotenv";
 
-const LOG_DIR = path.join(__dirname, '../../debug.log');
+dotenv.config();
+
+const LOG_DIR = path.join(__dirname, "../../debug.log");
 
 const levels = {
   error: 0,
@@ -12,31 +15,33 @@ const levels = {
 };
 
 const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'white',
+  error: "red",
+  warn: "yellow",
+  info: "green",
+  http: "magenta",
+  debug: "white",
 };
 
 winston.addColors(colors);
 
 const format = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => `${String(info.timestamp)} ${info.level} ${String(info.message)}`),
+  winston.format.printf(
+    (info) => `${String(info.timestamp)} ${info.level} ${String(info.message)}`,
+  ),
 );
 
 const transports = [
   new winston.transports.Console(),
   new winston.transports.File({
     filename: LOG_DIR,
-    level: 'debug',
+    level: "debug",
   }),
 ];
 
 const Logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'development' ? 'debug' : 'warn',
+  level: process.env.NODE_ENV === "development" ? "debug" : "warn",
   levels,
   format,
   transports,
