@@ -1,11 +1,7 @@
 fastapi==0.109.0
 pydantic==2.6.0
 numpy==1.24.3
-Pillow==10.1.0
 python-multipart==0.0.6
 uvicorn==0.27.0.post1
 yt-dlp==2024.3.9.232714.dev0
 httpx==0.26
-opencv-python-headless>=4.9
-tflite-runtime==2.14.0
-gdown==5.1.0

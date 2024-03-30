@@ -30,23 +30,6 @@ class VideoDownloaderTest(IsolatedAsyncioTestCase):
 
         logger.info("Text data retrieval test passed.")
 
-    async def test_frame_data_no_exception(self):
-        """
-        Test to ensure that no exceptions are thrown with expected usage
-        """
-
-        logger.info("Starting frame data retrieval test.")
-
-        for result in await asyncio.gather(
-            *(VideoDownloader(id).get_video_frames() for id in self.video_ids),
-            return_exceptions=True,
-        ):
-            self.assertTrue(
-                not (isinstance(result, VideoDownloaderError)), "Expected image data!"
-            )
-
-        logger.info("Frame data retrieval test passed.")
-
     async def test_text_data_category_not_empty(self):
         """
         Test to ensure that the video category is properly populated
@@ -79,19 +62,3 @@ class VideoDownloaderTest(IsolatedAsyncioTestCase):
             )
 
         logger.info("Text data test passed.")
-
-    async def test_frame_data_not_empty(self):
-        """
-        Test to ensure that downloader returns at least 2 images
-
-        We check for 2 since diffing requires at least 2 images
-        """
-
-        logger.info("Starting frame data test.")
-
-        for result in await asyncio.gather(
-            *(VideoDownloader(id).get_video_frames() for id in self.video_ids)
-        ):
-            self.assertLess(1, len(result), "Expected at least 2 images!")
-
-        logger.info("Frame data test passed.")

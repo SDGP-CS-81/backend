@@ -2,7 +2,6 @@ import express, { Request, Response, Application } from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 
-
 import { videoRouter } from "./routes/video";
 import { channelRouter } from "./routes/channel";
 import { loggerMiddleware } from "./middleware/requestLogger";
@@ -30,7 +29,6 @@ app.use(loggerMiddleware);
 app.use(secondsLimiter, minuteLimiter);
 app.use(express.json());
 app.use(cors());
-
 
 // Apply the rate limiter to the routes
 app.use("/api", videoRouter);

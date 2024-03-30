@@ -1,11 +1,17 @@
 import { Request, Response } from "express";
-import { CategoriesDocument, ChannelDocument, Channel } from "../models/Channel";
-import Logger from '../logger';
+import {
+  CategoriesDocument,
+  ChannelDocument,
+  Channel,
+} from "../models/Channel";
+import Logger from "../logger";
 
 export const getHighestVoteForChannel = async (req: Request, res: Response) => {
   try {
     const channelId: string = req.params.channelId;
-    Logger.info(`Received request to get highest vote for channel ${channelId}`);
+    Logger.info(
+      `Received request to get highest vote for channel ${channelId}`
+    );
 
     // find channel using channel id
     const channel: ChannelDocument | null = await Channel.findById(channelId);
@@ -30,7 +36,7 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
 
     // check if all category votes are zero
     const allZeroVotes: boolean = Object.values(categories).every(
-      (votes) => votes === 0,
+      (votes) => votes === 0
     );
 
     // if all category votes are zero, return null
@@ -57,14 +63,20 @@ export const getHighestVoteForChannel = async (req: Request, res: Response) => {
 
     // if there are multiple categories with the same non-zero votes, set most voted category to null
     if (multipleCategoriesWithSameVotes && maxVotes !== 0) {
-      Logger.info(`Multiple categories with the same non-zero votes for channel ${channelId}`);
+      Logger.info(
+        `Multiple categories with the same non-zero votes for channel ${channelId}`
+      );
       mostVotedCategory = null;
     }
 
     // Return the most voted category
     res.json({ mostVotedCategory });
-  } catch (error: any) {
-    Logger.error(`Internal server error while getting highest vote for channel: ${error.message}`);
+  } catch (error) {
+    Logger.error(
+      `Internal server error while getting highest vote for channel: ${
+        error instanceof Error ? error.message : ""
+      }`
+    );
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -81,7 +93,9 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
   }
 
   try {
-    Logger.info(`Received request to increment vote count for channel ${channelId} and category ${category}`);
+    Logger.info(
+      `Received request to increment vote count for channel ${channelId} and category ${category}`
+    );
     let channel = await Channel.findById(channelId);
 
     if (!channel) {
@@ -99,12 +113,16 @@ export const incrementVoteCount = async (req: Request, res: Response) => {
     // save the updated channel document
     await channel.save();
 
-    Logger.info(`Vote count incremented successfully for channel ${channelId} and category ${category}`);
+    Logger.info(
+      `Vote count incremented successfully for channel ${channelId} and category ${category}`
+    );
     return res
       .status(200)
       .json({ message: "Vote count incremented successfully" });
-  } catch (error:any) {
-    Logger.error(`Internal server error: ${error.message}`);
+  } catch (error) {
+    Logger.error(
+      `Internal server error: ${error instanceof Error ? error.message : ""}`
+    );
     return res.status(500).json({ error: "Internal server error" });
   }
 };
