@@ -2,7 +2,7 @@ name: Backend Docker Build
 
 on:
   push:
-    branches: [main]
+    branches: [release]
 
 jobs:
   docker-build-and-push:
